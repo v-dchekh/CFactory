@@ -39,7 +39,7 @@ class ProcessingSystem extends Processing {
   }
   private def schemasListAdd(fieldSchemaValue: String) {
     logger.debug("topic_type = add")
-    val path = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user5.avsc"
+    val path = "d:/Users/Dzmitry_Chekh/Avro_schemas/user5.avsc"
     Files.write(Paths.get(path), fieldSchemaValue.getBytes(StandardCharsets.UTF_8))
     println(createElement(Some("5"), Some(path)))
     schemasListRefresh

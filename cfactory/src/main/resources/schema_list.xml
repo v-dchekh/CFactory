@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <body>
 <schemas>
-	<schema id = "0" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user3.avsc" />
-	<schema id = "1" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user.avsc" />
-	<schema id = "2" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user2.avsc" />
+	<schema id = "0" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user3.avsc" />
+	<schema id = "1" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user.avsc" />
+	<schema id = "2" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user2.avsc" />
 </schemas>
 </body>
