@@ -14,7 +14,7 @@ import scala.collection.mutable.HashMap
 object AvroWrapper  {
   final val MAGIC = Array[Byte](0x0)
 
-  val schemaRegistry = Map(0 -> Schema.parse(new File("d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user3.avsc")))
+  //val schemaRegistry = Map(0 -> Schema.parse(new File("d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user3.avsc")))
 
   def encode(obj: GenericRecord, schemaId: Int, schema_list :  HashMap[Int, Schema]): Array[Byte] = {
     val out = new ByteArrayOutputStream()
@@ -30,7 +30,7 @@ object AvroWrapper  {
 
     out.toByteArray
   }
-
+/*
   def decode(bytes: Array[Byte]): GenericRecord = {
     val decoder = DecoderFactory.get().binaryDecoder(bytes, null)
     val magic = new Array[Byte](1)
@@ -48,4 +48,6 @@ object AvroWrapper  {
         reader.read(null, decoder)
     }
   }
+  * 
+  */
 }

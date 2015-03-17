@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <producer_groups>
 	<schemas>
-		<schema id = "0" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user3.avsc" />
-		<schema id = "1" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user.avsc" />
-		<schema id = "2" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/user2.avsc" />
-		<schema id = "3" file = "d:/Users/Dzmitry_Chekh/Scala_workspace/kafka_prod_cons/avro/new_schema.avsc" />
+		<schema id = "0" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user3.avsc" />
+		<schema id = "1" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user.avsc" />
+		<schema id = "2" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/user2.avsc" />
+		<schema id = "3" file = "d:/Users/Dzmitry_Chekh/Avro_schemas/new_schema.avsc" />
 	</schemas>
 	<data>
 		<message msg = "msg1" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "0"/>
