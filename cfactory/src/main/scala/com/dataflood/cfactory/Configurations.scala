@@ -9,10 +9,11 @@ import scala.xml.Elem
 object Configurations {
 
   def getSchemaList(cfg_XML: Elem) = {
+    val schema_path = ((cfg_XML \\ "schemas") \ "@path").text
     val schema_list_XML = (cfg_XML \\ "schemas" \\ "schema")
     var schema_list_Map = new HashMap[Int, Schema]
     schema_list_XML.foreach { n =>
-      val schema = Schema.parse(new File((n \ "@file").text))
+      val schema = Schema.parse(new File(schema_path+(n \ "@file").text))
       val schema_id = (n \ "@id").text.toInt
       schema_list_Map += (schema_id -> schema)
     }

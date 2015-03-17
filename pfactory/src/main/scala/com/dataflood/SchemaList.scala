@@ -12,11 +12,14 @@ class SchemaList {
     var file_ = file
     if (file_.length == 0) file_ = getClass.getResource("/producer_msg.xml").getFile
     var schemas_XML = XML.loadFile(file_)
+    
+    val schema_path = ((schemas_XML \\ "schemas") \ "@path").text
+
     var schemas_list = (schemas_XML \\ "schemas" \\ "schema")
     //    val schemas_array = new ArrayBuffer[Map[String, Any]]()
     var scores = new HashMap[Int, Schema]
     schemas_list.foreach { n =>
-      var schema = Schema.parse(new File((n \ "@file").text))
+      var schema = Schema.parse(new File(schema_path+(n \ "@file").text))
       //val m = Map("id" -> (n \ "@id").text, "schema" -> schema)
       var schema_id = (n \ "@id").text.toInt
       scores += (schema_id -> schema)
