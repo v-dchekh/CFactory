@@ -1,6 +1,6 @@
 package com.dataflood.cfactory
 
-import scala.collection.mutable.{ ArrayBuffer , HashMap }
+import scala.collection.mutable.{ ArrayBuffer, HashMap }
 import scala.xml.{ XML, Elem, Node }
 import org.apache.avro.generic.{ GenericRecord }
 import org.apache.log4j.Logger
@@ -38,15 +38,17 @@ class ProcessingSystem extends Processing {
       <schema file={ atr1.getOrElse(null) } id={ atr2.getOrElse(null) }/>
     }
 
+    //------------- JSON Pretty Print ----------------)      
     def jsonPrettyPrint(input: String) = {
       var gson = new GsonBuilder().setPrettyPrinting().create()
       var jp = new JsonParser
       var prettyJsonString = gson.toJson(jp.parse(input))
       prettyJsonString
     }
-    
+
     def schemasListRefresh = CFactory.schema_list = Configurations.getSchemaList()
 
+    //------------- Added new schema ----------------)      
     def schemasListAdd {
       def addChild(n: Node, newChild: Node) = n match {
         case Elem(prefix, label, attribs, scope, child @ _*) =>
@@ -54,11 +56,12 @@ class ProcessingSystem extends Processing {
         case _ => error("Can only add children to elements!")
       }
 
+      //------------- Write schema to a file ----------------)      
       val path = Configurations.getSchemaPath() + fieldAvroNameValue
       val schema_json = jsonPrettyPrint(fieldAvroSchemaValue)
-
       Files.write(Paths.get(path), schema_json.getBytes(StandardCharsets.UTF_8))
 
+      //------------- Adde new schema record to the config file ----------------)      
       var newSchema = createElement(Some(fieldAvroNameValue), Some("5"))
       var schema_list_XML = (CFactory.cfg_XML \\ "schemas")
       var consumer_groups_XML = (CFactory.cfg_XML \\ "consumer_groups")
