@@ -1,13 +1,12 @@
 package com.dataflood.cfactory
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ ArrayBuffer , HashMap }
+import scala.xml.{ XML, Elem, Node }
 import org.apache.avro.generic.{ GenericRecord }
-import scala.collection.mutable.HashMap
-import scala.xml.XML
+import org.apache.log4j.Logger
 import java.nio.file.{ Paths, Files }
 import java.nio.charset.StandardCharsets
-
-import org.apache.log4j.Logger
+import com.google.gson.{ JsonParser, GsonBuilder }
 
 trait TRProcessing {
   def run(x: ArrayBuffer[GenericRecord], topic_type: Int)
@@ -30,26 +29,55 @@ class Processing extends TRProcessing {
 
 class ProcessingSystem extends Processing {
 
-  private def createElement(atr1: Option[String], atr2: Option[String]) = {
-    <schema id={ atr1.getOrElse(null) } file={ atr2.getOrElse(null) }/>
-  }
-  private def schemasListRefresh {
-    logger.debug("topic_type = refresh")
-    CFactory.schema_list = Configurations.getSchemaList(XML.loadFile(CFactory.filename))
-  }
-  private def schemasListAdd(fieldSchemaValue: String) {
-    logger.debug("topic_type = add")
-    val path = "d:/Users/Dzmitry_Chekh/Avro_schemas/user5.avsc"
-    Files.write(Paths.get(path), fieldSchemaValue.getBytes(StandardCharsets.UTF_8))
-    println(createElement(Some("5"), Some(path)))
-    schemasListRefresh
-  }
-  private def schemasListDelete {
-    logger.debug("topic_type = delete")
-    schemasListRefresh
-  }
-
   def run(messageArray: ArrayBuffer[GenericRecord]) {
+    var fieldActionValue = new (String)
+    var fieldAvroNameValue = new (String)
+    var fieldAvroSchemaValue = new (String)
+
+    def createElement(atr1: Option[String], atr2: Option[String]) = {
+      <schema file={ atr1.getOrElse(null) } id={ atr2.getOrElse(null) }/>
+    }
+
+    def jsonPrettyPrint(input: String) = {
+      var gson = new GsonBuilder().setPrettyPrinting().create()
+      var jp = new JsonParser
+      var prettyJsonString = gson.toJson(jp.parse(input))
+      prettyJsonString
+    }
+    
+    def schemasListRefresh = CFactory.schema_list = Configurations.getSchemaList()
+
+    def schemasListAdd {
+      def addChild(n: Node, newChild: Node) = n match {
+        case Elem(prefix, label, attribs, scope, child @ _*) =>
+          Elem(prefix, label, attribs, scope, child ++ newChild: _*)
+        case _ => error("Can only add children to elements!")
+      }
+
+      val path = Configurations.getSchemaPath() + fieldAvroNameValue
+      val schema_json = jsonPrettyPrint(fieldAvroSchemaValue)
+
+      Files.write(Paths.get(path), schema_json.getBytes(StandardCharsets.UTF_8))
+
+      var newSchema = createElement(Some(fieldAvroNameValue), Some("5"))
+      var schema_list_XML = (CFactory.cfg_XML \\ "schemas")
+      var consumer_groups_XML = (CFactory.cfg_XML \\ "consumer_groups")
+
+      var root: Node = schema_list_XML(0)
+      schema_list_XML = addChild(root, newSchema)
+      schema_list_XML = <body>{ consumer_groups_XML }{ schema_list_XML }</body>
+
+      val prettyPrinter = new xml.PrettyPrinter(180, 4)
+      val prettyXml = prettyPrinter.formatNodes(schema_list_XML)
+      XML.save(CFactory.filename, XML.loadString(prettyXml), "UTF-8", true, null)
+      //      logger.debug(prettyXml)
+      schemasListRefresh
+    }
+
+    def schemasListDelete {
+      schemasListRefresh
+    }
+
     messageArray.foreach { x =>
       val schemaFields = x.getSchema.getFields
       val schemaDoc = x.getSchema.getDoc
@@ -57,17 +85,26 @@ class ProcessingSystem extends Processing {
       //------------- get an Action field (name and value) ----------------)      
       val fieldAction = schemaFields.get(0)
       val fieldActionName = fieldAction.name()
-      val fieldActionValue = x.get(0).toString()
+      fieldActionValue = x.get(0).toString()
+
+      //------------- get a Schema Name field (name and value) ------------)      
+      val fieldAvroName = schemaFields.get(1)
+      val fieldAvroNameName = fieldAction.name()
+      fieldAvroNameValue = x.get(1).toString()
 
       //------------- get a Schema Body field (name and value) ------------)      
-      val fieldAvroSchema = schemaFields.get(1)
+      val fieldAvroSchema = schemaFields.get(2)
       val fieldAvroSchemaName = fieldAction.name()
-      val fieldAvroSchemaValue = x.get(1).toString()
+      fieldAvroSchemaValue = x.get(2).toString()
+
+      logger.debug("---------------------------------------------------------------")
+      logger.debug("action_type = " + fieldActionValue + "," + fieldAvroNameValue) //+ "," + fieldAvroSchemaValue)
+      logger.debug("---------------------------------------------------------------")
 
       fieldActionName match {
         case "action" => {
           fieldActionValue match {
-            case "add"     => schemasListAdd(fieldAvroSchemaValue)
+            case "add"     => schemasListAdd
             case "delete"  => schemasListDelete
             case "refresh" => schemasListRefresh
             case _         => println(s"topic_type is not in (refresh)")

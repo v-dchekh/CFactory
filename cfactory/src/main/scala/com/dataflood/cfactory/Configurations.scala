@@ -8,8 +8,10 @@ import scala.xml.Elem
 
 object Configurations {
 
-  def getSchemaList(cfg_XML: Elem) = {
-    val schema_path = ((cfg_XML \\ "schemas") \ "@path").text
+  def getSchemaPath(cfg_XML: Elem = CFactory.cfg_XML) = ((cfg_XML \\ "schemas") \ "@path").text
+  
+  def getSchemaList(cfg_XML: Elem = CFactory.cfg_XML) = {
+    val schema_path = getSchemaPath()
     val schema_list_XML = (cfg_XML \\ "schemas" \\ "schema")
     var schema_list_Map = new HashMap[Int, Schema]
     schema_list_XML.foreach { n =>
@@ -21,7 +23,7 @@ object Configurations {
     schema_list_Map
   }
 
-  def getcons_groupList(cfg_XML: Elem) = {
+  def getcons_groupList(cfg_XML: Elem = CFactory.cfg_XML) = {
     val cons_groupList = (cfg_XML \\ "consumer_groups" \\ "consumer_group")
     val groupList = new ArrayBuffer[Map[String, Any]]()
 
