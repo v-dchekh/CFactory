@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <producer_groups>
-	<schemas path = "d:/Users/Dzmitry_Chekh/Avro_schemas/">
+	<schemas path = "d:/Users/Dzmitry_Chekh/Avro_schemas/PF/">
 		<schema id = "0" file = "user3.avsc" />
 		<schema id = "1" file = "user.avsc" />
 		<schema id = "2" file = "user2.avsc" />
 		<schema id = "3" file = "new_schema.avsc" />
 	</schemas>
 	<data>
+	<!--
 		<message msg = "msg1" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "0"/>
 		<message msg = "msg2" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "1" schema_id = "1"/>
 		<message msg = "msg3" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "2" schema_id = "2"/>
@@ -24,9 +25,10 @@
 		<message msg = "msg3" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "2" schema_id = "2"/>
 		<message msg = "msg1" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "0"/>
 		<message msg = "msg2" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "1" schema_id = "1"/>
-		<message msg = "msg3" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "2" schema_id = "2"/>
-		<message msg = "add" topic="sys.avro.schema"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "3"/>
+		<message msg = "msg3" topic="len5"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "2" schema_id = "2"/> 
 		<message msg = "delete" topic="sys.avro.schema"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "3"/>
 		<message msg = "refresh" topic="sys.avro.schema"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "3"/>
+		-->
+		<message msg = "add" topic="sys.avro.schema"  brokerconnect = "localhost:9092,localhost:9093,localhost:9094" part_number = "0" schema_id = "3"/>
 	</data>
 </producer_groups>

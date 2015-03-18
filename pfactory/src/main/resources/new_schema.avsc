@@ -1,9 +1,0 @@
-{"namespace": "example.avro",
- "type": "record",
- "name": "new_schemas",
- "doc" : "%SPROCNAME_4%",
- "fields": [
-	{"name": "action", "type": "string"},
-	{"name": "schema_body", "type": "string" }
- ]
-}

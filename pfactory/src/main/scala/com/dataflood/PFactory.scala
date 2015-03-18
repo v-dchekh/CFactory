@@ -143,6 +143,7 @@ Where: -v   Run verbosely
         }
         case 3 => {
           rec.put("action", msg)
+          rec.put("name", "user5.avsc")
           rec.put("schema_body", schema.toString())
         }
       }
