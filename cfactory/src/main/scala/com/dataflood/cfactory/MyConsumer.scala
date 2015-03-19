@@ -28,7 +28,10 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
 
   def run() {
     val p1 = new Processing
-    while (true) read(messageArray => p1.run(messageArray, topic_type))
+    while (true) {
+      read(messageArray => p1.run(messageArray, topic_type))
+      connector.commitOffsets(true)
+    }
     cdl.countDown()
   }
 

@@ -13,18 +13,15 @@ class ConsumerGroup(threadNumber: Int = 5,
                     topic: String,
                     batch_count: String,
                     topic_type: String,
-                    latch: CountDownLatch) {
+                    latch: CountDownLatch,
+                    cg_GlobalConfig : Properties) {
 
   //  info("setup:start topic=%s for zk=%s and groupId=%s".format(topic, a_zookeeper, a_groupId))
   protected val logger = Logger.getLogger(getClass.getName)
 
   def createConsumerConfig: Properties = {
-    val props = new Properties()
-    props.put("zookeeper.connect", zookeeper)
+    val props = cg_GlobalConfig
     props.put("group.id", groupId)
-    props.put("zookeeper.session.timeout.ms", "4000")
-    props.put("zookeeper.sync.time.ms", "200")
-    props.put("auto.commit.interval.ms", "1000")
     props.put("topic", topic)
     props.put("batch_count", batch_count)
     props.put("topic_type", topic_type)

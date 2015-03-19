@@ -74,6 +74,10 @@ Where: -v   Run verbosely
     //--------------------- get a list of consumer groups-----------// 
     val groupList = Configurations.getcons_groupList(cfg_XML)
 
+    //--------------------- get a list of consumer's properties-----//
+    
+    val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
+
     //--------------------- run consumer groups---------------------// 
 
     groupList.foreach { n =>
@@ -84,7 +88,8 @@ Where: -v   Run verbosely
         n("topic").toString(),
         n("batch_count").toString(),
         n("topic_type").toString(),
-        latch).launch
+        latch,
+        cg_GlobalConfig).launch
     }
     latch.await()
 
