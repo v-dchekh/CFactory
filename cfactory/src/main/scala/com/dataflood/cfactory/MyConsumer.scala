@@ -17,7 +17,6 @@ import org.apache.log4j.Logger
 class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) extends Runnable {
 
   protected val logger = Logger.getLogger(getClass.getName)
-
   val config = new ConsumerConfig(cg_config)
   val connector = Consumer.create(config)
   val filterSpec = new Whitelist(cg_config.getProperty("topic"))
@@ -48,7 +47,7 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
         numMessages += 1
         numMessagesTotal += 1
         messagArray += message
-        logger.debug(("topic : " + cg_config.getProperty("topic") + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $mes , total = $numMessagesTotal"))
+        logger.debug(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $mes , total = $numMessagesTotal"))
 
         if (numMessages == batch_count) {
           processing(messagArray)

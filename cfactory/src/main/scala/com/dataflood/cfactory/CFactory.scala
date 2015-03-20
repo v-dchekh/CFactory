@@ -66,13 +66,13 @@ Where: -v   Run verbosely
     cfg_XML = XML.loadFile(filename)
 
     //--------------------- get avro schemas---- -------------------// 
-    schema_list = Configurations.getSchemaList(cfg_XML)
+    schema_list = Configurations.getSchemaList()
 
     //--------------------- get total number threads----------------// 
-    val latch = new CountDownLatch(Configurations.getThread_number(cfg_XML))
+    val latch = new CountDownLatch(Configurations.getThread_number())
 
     //--------------------- get a list of consumer groups-----------// 
-    val groupList = Configurations.getcons_groupList(cfg_XML)
+    val groupList = Configurations.getcons_groupList()
 
     //--------------------- get a list of consumer's properties-----//
     

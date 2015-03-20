@@ -6,6 +6,7 @@ import kafka.utils.Logging
 import org.apache.avro.Schema
 import org.apache.log4j.Logger
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 class ConsumerGroup(threadNumber: Int = 5,
                     zookeeper: String,
@@ -20,22 +21,21 @@ class ConsumerGroup(threadNumber: Int = 5,
   protected val logger = Logger.getLogger(getClass.getName)
 
   def createConsumerConfig: Properties = {
-    val props = cg_GlobalConfig
-    props.put("group.id", groupId)
-    props.put("topic", topic)
-    props.put("batch_count", batch_count)
-    props.put("topic_type", topic_type)
+    val props = Configurations.getcons_GlobalConfig()
+    props.setProperty("group.id", groupId)
+    props.setProperty("topic", topic)
+    props.setProperty("batch_count", batch_count)
+    props.setProperty("topic_type", topic_type)
     props
   }
 
   def launch {
-    val cg_config = createConsumerConfig
-
+    var cg_config = createConsumerConfig
     for (i <- 1 to threadNumber by 1) {
       println("start Thread ****  groupId : " + groupId + ", thread : " + i)
       try {
-        var consumer = new MyConsumer[String](":" + i, latch, cg_config)
-        new Thread(consumer).start()
+        var myConsumer = new MyConsumer[String](":" + i, latch, cg_config)
+        new Thread(myConsumer).start()
       } catch {
         case e: Throwable =>
           if (true) logger.error("Error creating new Consumer: ", e)
