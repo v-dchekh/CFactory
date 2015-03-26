@@ -9,9 +9,9 @@
 		<property name = "zookeeper.sync.time.ms" value = "200"/>
 	</consumer_config>
 	<consumer_groups>
+		<consumer_group groupId="sys.avro.schema"   zkconnect = "localhost:2181,localhost:2182,localhost:2183" topic = "sys.avro.schema" thread_number = "1" batch_count = "1" topic_type = "1"/>
 		<consumer_group groupId="group_num_1"  zkconnect = "localhost:2181,localhost:2182,localhost:2183" topic = "len5" thread_number = "1" batch_count = "10" topic_type = "0"/>
 		<consumer_group groupId="group_num_2"  zkconnect = "localhost:2181,localhost:2182,localhost:2183" topic = "lena7" thread_number = "1" batch_count = "10" topic_type = "0"/>
-		<consumer_group groupId="sys.avro.schema"   zkconnect = "localhost:2181,localhost:2182,localhost:2183" topic = "sys.avro.schema" thread_number = "1" batch_count = "1" topic_type = "1"/>
 	</consumer_groups>
 	<schemas path = "d:/Users/Dzmitry_Chekh/Avro_schemas/CF/">
 		<schema id = "0" file = "user3.avsc" />

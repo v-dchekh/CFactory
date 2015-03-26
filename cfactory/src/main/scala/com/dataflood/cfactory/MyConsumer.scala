@@ -29,7 +29,7 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
     val p1 = new Processing
     while (true) {
       read(messageArray => p1.run(messageArray, topic_type))
-      connector.commitOffsets(true)
+      connector.commitOffsets
     }
     cdl.countDown()
   }
@@ -53,6 +53,7 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
           processing(messagArray)
           numMessages = 0
           messagArray.clear()
+          logger.info(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $mes , total = $numMessagesTotal"))
         }
       } catch {
         case e: Throwable =>

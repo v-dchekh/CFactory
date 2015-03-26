@@ -78,6 +78,7 @@ Where: -v   Run verbosely
     
     val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
 
+    Configurations.getConnectMSSQL
     //--------------------- run consumer groups---------------------// 
 
     groupList.foreach { n =>
@@ -93,7 +94,7 @@ Where: -v   Run verbosely
     }
     latch.await()
 
-    endOfJob("all threads are finished!")
+    endOfJob("all threads are finished! ")
   }
 
 }

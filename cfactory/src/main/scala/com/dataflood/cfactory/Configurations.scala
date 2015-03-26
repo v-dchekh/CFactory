@@ -6,8 +6,39 @@ import java.io.File
 import scala.collection.mutable.HashMap
 import scala.xml.Elem
 import java.util.Properties
+import java.sql.DriverManager
+import java.sql.Connection
 
 object Configurations {
+
+  def getConnectMSSQL = {
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+
+    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+    val username = "scala"
+    val password = "111111"
+
+    // there's probably a better way to do this
+    var connection: Connection = null
+
+    try {
+      // make the connection
+      //Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
+      val connection = DriverManager.getConnection(url)
+      // create the statement, and run the select query
+      val statement = connection.createStatement()
+      val resultSet = statement.executeQuery("SELECT top(1) userid, username  from user_")
+      while (resultSet.next()) {
+        val userid = resultSet.getString("userid")
+        val username = resultSet.getString("username")
+        println("host, user = " + userid + ", " + username)
+      }
+    } catch {
+      case e: Throwable =>
+        if (true) println(e)
+        else throw e
+    }
+  }
 
   def getSchemaPath(cfg_XML: Elem = CFactory.cfg_XML) = ((cfg_XML \\ "schemas") \ "@path").text
 

@@ -62,13 +62,14 @@ class ProcessingSystem extends Processing {
       Files.write(Paths.get(path), schema_json.getBytes(StandardCharsets.UTF_8))
 
       //------------- Adde new schema record to the config file ----------------)      
-      var newSchema = createElement(Some(fieldAvroNameValue), Some("5"))
       var schema_list_XML = (CFactory.cfg_XML \\ "schemas")
       var consumer_groups_XML = (CFactory.cfg_XML \\ "consumer_groups")
+      var consumer_config_XML = (CFactory.cfg_XML \\ "consumer_config")
 
+      var newSchema = createElement(Some(fieldAvroNameValue), Some("5"))
       var root: Node = schema_list_XML(0)
       schema_list_XML = addChild(root, newSchema)
-      schema_list_XML = <body>{ consumer_groups_XML }{ schema_list_XML }</body>
+      schema_list_XML = <body>{ consumer_config_XML }{ consumer_groups_XML }{ schema_list_XML }</body>
 
       val prettyPrinter = new xml.PrettyPrinter(180, 4)
       val prettyXml = prettyPrinter.formatNodes(schema_list_XML)
