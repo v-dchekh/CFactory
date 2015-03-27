@@ -9,20 +9,20 @@ import java.nio.charset.StandardCharsets
 import com.google.gson.{ JsonParser, GsonBuilder }
 
 trait TRProcessing {
-  def run(x: ArrayBuffer[GenericRecord], topic_type: Int)
+  def run(x: ArrayBuffer[GenericRecord], topic_type: Int , threadId : Int)
 }
 
 class Processing extends TRProcessing {
   protected val logger = Logger.getLogger(getClass.getName)
 
   var topic_type_ : Int = 0
-  def run(messageArray: ArrayBuffer[GenericRecord], topic_type: Int) {
+  def run(messageArray: ArrayBuffer[GenericRecord], topic_type: Int, threadId : Int) {
     topic_type_ = topic_type
     topic_type match {
       case 1 =>
         val pr = new ProcessingSystem().run(messageArray)
       case _ =>
-        val pr = new ProcessingSQLInsert().run(messageArray)
+        val pr = new ProcessingSQLInsert().run(messageArray, threadId)
     }
   }
 }

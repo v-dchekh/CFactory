@@ -14,7 +14,7 @@ import org.apache.avro.generic.{ GenericRecord }
 
 import org.apache.log4j.Logger
 
-class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) extends Runnable {
+class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties) extends Runnable {
 
   protected val logger = Logger.getLogger(getClass.getName)
   val config = new ConsumerConfig(cg_config)
@@ -28,7 +28,7 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
   def run() {
     val p1 = new Processing
     while (true) {
-      read(messageArray => p1.run(messageArray, topic_type))
+      read(messageArray => p1.run(messageArray, topic_type, threadId))
       connector.commitOffsets
     }
     cdl.countDown()
@@ -47,13 +47,13 @@ class MyConsumer[T](mes: String, cdl: CountDownLatch, cg_config: Properties) ext
         numMessages += 1
         numMessagesTotal += 1
         messagArray += message
-        logger.debug(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $mes , total = $numMessagesTotal"))
+        logger.debug(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
 
         if (numMessages == batch_count) {
           processing(messagArray)
           numMessages = 0
           messagArray.clear()
-          logger.info(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $mes , total = $numMessagesTotal"))
+          logger.info(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
         }
       } catch {
         case e: Throwable =>

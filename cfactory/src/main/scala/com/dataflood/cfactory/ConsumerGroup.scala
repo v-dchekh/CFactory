@@ -34,7 +34,7 @@ class ConsumerGroup(threadNumber: Int = 5,
     for (i <- 1 to threadNumber by 1) {
       println("start Thread ****  groupId : " + groupId + ", thread : " + i)
       try {
-        var myConsumer = new MyConsumer[String](":" + i, latch, cg_config)
+        var myConsumer = new MyConsumer[String]( i, latch, cg_config)
         new Thread(myConsumer).start()
       } catch {
         case e: Throwable =>

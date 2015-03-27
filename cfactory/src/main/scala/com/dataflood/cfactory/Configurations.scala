@@ -8,10 +8,11 @@ import scala.xml.Elem
 import java.util.Properties
 import java.sql.DriverManager
 import java.sql.Connection
+import java.sql.Statement
 
 object Configurations {
 
-  def getConnectMSSQL = {
+  def getConnectMSSQL: Statement = {
     val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
@@ -20,26 +21,81 @@ object Configurations {
 
     // there's probably a better way to do this
     var connection: Connection = null
+    var statement: Statement = null
 
     try {
       // make the connection
       //Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
-      val connection = DriverManager.getConnection(url)
+      connection = DriverManager.getConnection(url)
       // create the statement, and run the select query
-      val statement = connection.createStatement()
+      statement = connection.createStatement()
+      /*
       val resultSet = statement.executeQuery("SELECT top(1) userid, username  from user_")
       while (resultSet.next()) {
         val userid = resultSet.getString("userid")
         val username = resultSet.getString("username")
         println("host, user = " + userid + ", " + username)
       }
+      * 
+      */
     } catch {
       case e: Throwable =>
         if (true) println(e)
         else throw e
     }
+    statement
   }
 
+  def getArayStatementMSSQL (arraySize : Int = 10): Array[Statement] = {
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+
+    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+    val username = "scala"
+    val password = "111111"
+
+    // there's probably a better way to do this
+    var arrayStatement = new Array[Statement](arraySize)
+    var connection: Connection = null
+    var statement: Statement = null
+
+    for (i <- 0 to arraySize-1 by 1) {
+      try {
+        connection = DriverManager.getConnection(url)
+        arrayStatement(i) = connection.createStatement()
+      } catch {
+        case e: Throwable =>
+          if (true) println(e)
+          else throw e
+      }
+    }
+    arrayStatement
+  }
+
+  def getArayConnectionMSSQL (arraySize : Int = 10): Array[Connection] = {
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+
+    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+    val username = "scala"
+    val password = "111111"
+
+    // there's probably a better way to do this
+    var arrayConnection = new Array[Connection](arraySize)
+    var connection: Connection = null
+    var statement: Statement = null
+
+    for (i <- 0 to arraySize-1 by 1) {
+      try {
+        connection = DriverManager.getConnection(url)
+        arrayConnection(i) = connection
+      } catch {
+        case e: Throwable =>
+          if (true) println(e)
+          else throw e
+      }
+    }
+    arrayConnection
+  }
+  
   def getSchemaPath(cfg_XML: Elem = CFactory.cfg_XML) = ((cfg_XML \\ "schemas") \ "@path").text
 
   def getSchemaList(cfg_XML: Elem = CFactory.cfg_XML) = {

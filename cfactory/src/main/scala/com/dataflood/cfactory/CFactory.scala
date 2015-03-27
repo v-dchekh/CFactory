@@ -1,13 +1,13 @@
 package com.dataflood.cfactory
 
-import java.util.Properties
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
-import java.io.File
-import org.apache.avro.Schema
+import java.util.concurrent.CountDownLatch
 import scala.collection.mutable.HashMap
-import scala.xml.XML
 import scala.xml.Elem
+import scala.xml.XML
+import org.apache.avro.Schema
 import org.apache.log4j.Logger
+import java.sql.Statement
+import java.sql.Connection
 
 object CFactory {
   protected val logger = Logger.getLogger(getClass.getName)
@@ -21,6 +21,8 @@ Where: -v   Run verbosely
 
   var schema_list: HashMap[Int, Schema] = null // = SchemaListObj.list
   var cfg_XML: Elem = null
+  var arrayStatement  : Array[Statement] = null
+  var arrayConnection : Array[Connection] = null
 
   var filename: String = ""
   var showme: String = ""
@@ -78,7 +80,9 @@ Where: -v   Run verbosely
     
     val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
 
-    Configurations.getConnectMSSQL
+    //--------------------- get a arrayStatement to MS SQL ---------//
+//    arrayStatement = Configurations.getArayStatementMSSQL(latch.getCount.toInt)
+    arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
     //--------------------- run consumer groups---------------------// 
 
     groupList.foreach { n =>
