@@ -28,31 +28,36 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties) e
   def run() {
     val p1 = new Processing
     while (true) {
-      read(messageArray => p1.run(messageArray, topic_type, threadId))
-      connector.commitOffsets
+//      read(messageArray => p1.run(messageArray, topic_type, threadId))
+      read(messagArray_schemaId => p1.run(messagArray_schemaId, topic_type, threadId))
+      //connector.commitOffsets
     }
     cdl.countDown()
   }
 
-  def read(processing: ArrayBuffer[GenericRecord] => Unit) = {
+  def read(processing: ArrayBuffer[Map[Int,GenericRecord]] => Unit) = {
     //-----------    info("reading on stream now")-------------//
     var numMessages: Int = 0
     var numMessagesTotal: Int = 0
     val messagArray = ArrayBuffer[GenericRecord]()
+    val messagArray_schemaId = ArrayBuffer[Map[Int,GenericRecord]]()
     for (messageAndTopic <- stream) //    while (!stream.isEmpty)
     {
       try {
         var message = AvroWrapper.decode(messageAndTopic.message)
+        var message_schemaId = AvroWrapper.decode_schemaId(messageAndTopic.message)
         var part = messageAndTopic.partition
         numMessages += 1
         numMessagesTotal += 1
         messagArray += message
+        messagArray_schemaId += message_schemaId
         logger.debug(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
 
         if (numMessages == batch_count) {
-          processing(messagArray)
+          processing(messagArray_schemaId)
           numMessages = 0
           messagArray.clear()
+          messagArray_schemaId.clear()
           logger.info(("topic : " +  messageAndTopic.topic  + "--| "  + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
         }
       } catch {

@@ -106,7 +106,7 @@ Where: -v   Run verbosely
       props_produser.put("metadata.broker.list", brk)
       props_produser.put("serializer.class", "kafka.serializer.DefaultEncoder")
       props_produser.put("request.required.acks", "1")
-      props_produser.put("producer.type", "sync")
+      props_produser.put("producer.type", "async")
       props_produser.put("queue.buffering.max.messages", "10000")
       props_produser.put("queue.buffering.max.ms", "100")
       props_produser.put("batch.num.messages", "500")
@@ -134,12 +134,13 @@ Where: -v   Run verbosely
           rec.put("name", "%null%")
         }
         case 1 => {
-          rec.put("name", "1")
-          rec.put("favorite_number", 2)
-          rec.put("favorite_color", "Hello \"world\" and 'city' ")
+          rec.put("name", "2")
+          rec.put("favorite_number", 1)
+          rec.put("favorite_color", msg)
+//          rec.put("favorite_color", "Hello \"world\" and 'city' ")
         }
         case 2 => {
-          rec.put("msg", "1")
+          rec.put("msg", "groupName")
         }
         case 3 => {
           rec.put("action", msg)
@@ -147,7 +148,7 @@ Where: -v   Run verbosely
           rec.put("schema_body", schema.toString())
         }
       }
-      println("rec ----| " + rec)
+      //println("rec ----| " + rec)
 
       pr2.send(AvroWrapper.encode(rec, schema_id.toInt, schema_list), part_number.getBytes(), part_number)
       msgc_count += 1

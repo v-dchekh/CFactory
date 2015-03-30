@@ -56,5 +56,25 @@ object AvroWrapper {
         reader.read(null, decoder)
     }
   }
+  def decode_schemaId(bytes: Array[Byte]): Map[Int,GenericRecord] = {
+    val decoder = DecoderFactory.get().binaryDecoder(bytes, null)
+    val magic = new Array[Byte](1)
+    decoder.readFixed(magic)
+
+    if (magic.deep != MAGIC.deep) throw new IllegalArgumentException("Not a camus byte array")
+
+    val schemaIdArray = new Array[Byte](4)
+    decoder.readFixed(schemaIdArray)
+    
+    var schemaId = ByteBuffer.wrap(schemaIdArray).getInt
+
+    val schemaOpt = CFactory.schema_list.get(schemaId)
+    schemaOpt match {
+      case None => throw new IllegalArgumentException("Invalid schema id")
+      case Some(schema) =>
+        val reader = new GenericDatumReader[GenericRecord](schema)
+        Map(schemaId -> reader.read(null, decoder))
+    }
+  }
 
 }

@@ -10,16 +10,23 @@ import java.sql.Connection
 
 class ProcessingSQLInsert extends Processing {
 
-  def run(messageArray: ArrayBuffer[GenericRecord], threadId: Int) {
+  def run(messageArray: ArrayBuffer[Map[Int, GenericRecord]], threadId: Int) {
     val count_ = messageArray.size
+    //logger.info("count_ = " + count_)
+    
     val toSQL = ArrayBuffer[Map[String, String]]()
     val toSQLAny = ArrayBuffer[Any]()
     val toSQLValues = ArrayBuffer[String]()
-    var schemaDoc : String = ""
+    val toAvroSchemas = ArrayBuffer[Int]()
+    var schemaDoc: String = ""
+    
+
     messageArray.foreach { x =>
-      var schemaFields = x.getSchema.getFields
-      schemaDoc = x.getSchema.getDoc
-      //var a = 0
+      var recordArray = x.toArray
+      var schema_Id = recordArray(0)._1
+      var genRecord = recordArray(0)._2
+      var schemaFields = genRecord.getSchema.getFields
+      schemaDoc = genRecord.getSchema.getDoc
       var recordToMap = new HashMap[String, Any]
       for (a <- 0 until schemaFields.size()) {
         val field = schemaFields.get(a)
@@ -27,7 +34,7 @@ class ProcessingSQLInsert extends Processing {
         val fieldOrder = field.order()
         val fieldType_ = field.schema().getType
         val fieldType2_ = field.schema().getType.getName
-        val fieldValue = x.get(a).toString()
+        val fieldValue = genRecord.get(a).toString()
         val fieldValueSQL = fieldType_.toString() match {
           case "STRING" => {
             if (fieldValue == "%null%") "null"
@@ -56,28 +63,39 @@ class ProcessingSQLInsert extends Processing {
       toSQL += Map(sqlFields -> sqlValues)
       val l = (schemaDoc, sqlFields, sqlValues)
       toSQLAny += l
-      toSQLValues += "%1% " + sqlValues
+      toSQLValues += s"%$schema_Id% $sqlValues"
+
+      
+      //logger.debug("schema_Id = "+ schema_Id + " --- "+(toAvroSchemas contains schema_Id).toString())
+      
+      if (!(toAvroSchemas contains schema_Id)) {
+        toAvroSchemas += schema_Id
+        //logger.info("toAvroSchemas += schema_Id === " + schema_Id)
+      }
     }
+
     logger.debug("-----------------------------------------------------------------------------------------")
     //    logger.debug(toSQLAny.toList.mkString("\n").replace("),", ")|"))
     //    logger.debug(toSQLAny.toList.mkString("\n").replace("),(", ") values (").toString())
     logger.debug(toSQLValues.toList.mkString("\n"))
+    logger.debug("toAvroSchemas.toList = " + toAvroSchemas.toList.mkString(","))
+
     try {
       var connection: Connection = CFactory.arrayConnection(threadId)
-      var pstmt = connection.prepareCall("{? = call dbo.ConsumerMSSQL(?,?)}")
+      var pstmt = connection.prepareCall("{? = call dbo.ConsumerMSSQL2(?,?)}")
       pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
-      pstmt.setString(2, "1" ) 
-      pstmt.setString(3, toSQLValues.toList.mkString("\n")) 
+      pstmt.setString(2, toAvroSchemas.toList.mkString(","))
+      pstmt.setString(3, toSQLValues.toList.mkString("\n"))
       pstmt.execute()
       val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
       logger.debug(resultSet)
-      
+      pstmt.close
+
     } catch {
       case e: Throwable =>
-        if (true) logger.info(e) 
+        if (true) logger.info(e)
         else throw e
     }
-
   }
 
 }

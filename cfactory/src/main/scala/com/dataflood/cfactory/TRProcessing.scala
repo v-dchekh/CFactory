@@ -9,14 +9,14 @@ import java.nio.charset.StandardCharsets
 import com.google.gson.{ JsonParser, GsonBuilder }
 
 trait TRProcessing {
-  def run(x: ArrayBuffer[GenericRecord], topic_type: Int , threadId : Int)
+  def run(x: ArrayBuffer[Map[Int,GenericRecord]], topic_type: Int , threadId : Int)
 }
 
 class Processing extends TRProcessing {
   protected val logger = Logger.getLogger(getClass.getName)
 
   var topic_type_ : Int = 0
-  def run(messageArray: ArrayBuffer[GenericRecord], topic_type: Int, threadId : Int) {
+  def run(messageArray: ArrayBuffer[Map[Int,GenericRecord]], topic_type: Int, threadId : Int) {
     topic_type_ = topic_type
     topic_type match {
       case 1 =>
@@ -29,7 +29,7 @@ class Processing extends TRProcessing {
 
 class ProcessingSystem extends Processing {
 
-  def run(messageArray: ArrayBuffer[GenericRecord]) {
+  def run(messageArray: ArrayBuffer[Map[Int,GenericRecord]]) {
     var fieldActionValue = new (String)
     var fieldAvroNameValue = new (String)
     var fieldAvroSchemaValue = new (String)
@@ -81,25 +81,26 @@ class ProcessingSystem extends Processing {
     def schemasListDelete {
       schemasListRefresh
     }
-
     messageArray.foreach { x =>
-      val schemaFields = x.getSchema.getFields
-      val schemaDoc = x.getSchema.getDoc
+      val recordArray  = x.toArray
+      val record = recordArray(0)._2 
+      val schemaFields = record.getSchema.getFields
+      val schemaDoc = record.getSchema.getDoc
       val recordToMap = HashMap[String, Any]()
       //------------- get an Action field (name and value) ----------------)      
       val fieldAction = schemaFields.get(0)
       val fieldActionName = fieldAction.name()
-      fieldActionValue = x.get(0).toString()
+      fieldActionValue = record.get(0).toString()
 
       //------------- get a Schema Name field (name and value) ------------)      
       val fieldAvroName = schemaFields.get(1)
       val fieldAvroNameName = fieldAction.name()
-      fieldAvroNameValue = x.get(1).toString()
+      fieldAvroNameValue = record.get(1).toString()
 
       //------------- get a Schema Body field (name and value) ------------)      
       val fieldAvroSchema = schemaFields.get(2)
       val fieldAvroSchemaName = fieldAction.name()
-      fieldAvroSchemaValue = x.get(2).toString()
+      fieldAvroSchemaValue = record.get(2).toString()
 
       logger.debug("---------------------------------------------------------------")
       logger.debug("action_type = " + fieldActionValue + "," + fieldAvroNameValue) //+ "," + fieldAvroSchemaValue)
