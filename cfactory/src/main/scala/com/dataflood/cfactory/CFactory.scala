@@ -8,9 +8,12 @@ import org.apache.avro.Schema
 import org.apache.log4j.Logger
 import java.sql.Statement
 import java.sql.Connection
+import scala.actors.threadpool.TimeUnit
+import java.lang.InterruptedException
 
 object CFactory {
   protected val logger = Logger.getLogger(getClass.getName)
+  sys addShutdownHook (shutdown)
 
   val usage = """
 Usage: parser [-v] [-f file] [-s sopt] ...
@@ -23,6 +26,7 @@ Where: -v   Run verbosely
   var cfg_XML: Elem = null
   var arrayStatement: Array[Statement] = null
   var arrayConnection: Array[Connection] = null
+  var consPingArray: Array[MyConsumer[String]] = null
 
   var filename: String = ""
   var showme: String = ""
@@ -49,6 +53,14 @@ Where: -v   Run verbosely
   def endOfJob(msg: String = usage) = {
     println(msg)
     sys.exit(1)
+  }
+
+  def shutdown() {
+    consPingArray.foreach { x =>
+      if (x != null) x.close()
+      logger.info("thread : " + x.trnumGlobal_ + " is shuted down")
+    }
+    Thread.sleep(1000)
   }
 
   def main(args: Array[String]) {
@@ -85,7 +97,7 @@ Where: -v   Run verbosely
     //    arrayStatement = Configurations.getArayStatementMSSQL(latch.getCount.toInt)
     arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
     //--------------------- run consumer groups---------------------// 
-    val consPingArray = new Array[MyConsumer[String]](latch.getCount.toInt)
+    consPingArray = new Array[MyConsumer[String]](latch.getCount.toInt)
 
     groupList.foreach { n =>
       val cg = new ConsumerGroup(
@@ -100,6 +112,7 @@ Where: -v   Run verbosely
         consPingArray).launch
     }
     logger.info("------------------------------------------------------------")
+    /*
     while (true) {
       Thread.sleep(5000)
       consPingArray.foreach { x =>
@@ -108,11 +121,16 @@ Where: -v   Run verbosely
           x.flush
         }
       }
+    }*/ /*
+    try {
+      Thread.sleep(10000)
+    } catch {
+      case e: InterruptedException => logger.debug("Interrupted, closing");
     }
+    shutdown()*/
 
     latch.await()
-
-    endOfJob("all threads are finished! ")
+    //endOfJob("all threads are finished! ")
   }
 
 }
