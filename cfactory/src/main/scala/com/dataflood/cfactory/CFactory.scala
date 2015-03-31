@@ -21,12 +21,14 @@ Where: -v   Run verbosely
 
   var schema_list: HashMap[Int, Schema] = null // = SchemaListObj.list
   var cfg_XML: Elem = null
-  var arrayStatement  : Array[Statement] = null
-  var arrayConnection : Array[Connection] = null
+  var arrayStatement: Array[Statement] = null
+  var arrayConnection: Array[Connection] = null
 
   var filename: String = ""
   var showme: String = ""
   var debug: Boolean = false
+  var thread_numberGlobal: Int = 0
+
   val unknown = "(^-[^\\s])".r
 
   val pf: PartialFunction[List[String], List[String]] = {
@@ -56,8 +58,7 @@ Where: -v   Run verbosely
 
     if (filename.length == 0) filename = getClass.getResource("/consumer_groups.xml").getFile
 
-
-    logger.info("CFactory v0.1") 
+    logger.info("CFactory v0.1")
     println("CFactory v0.1")
     println("debug=" + debug)
     println("showme=" + showme)
@@ -77,13 +78,14 @@ Where: -v   Run verbosely
     val groupList = Configurations.getcons_groupList()
 
     //--------------------- get a list of consumer's properties-----//
-    
+
     val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
 
     //--------------------- get a arrayStatement to MS SQL ---------//
-//    arrayStatement = Configurations.getArayStatementMSSQL(latch.getCount.toInt)
+    //    arrayStatement = Configurations.getArayStatementMSSQL(latch.getCount.toInt)
     arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
     //--------------------- run consumer groups---------------------// 
+    val consPingArray = new Array[MyConsumer[String]](latch.getCount.toInt)
 
     groupList.foreach { n =>
       val cg = new ConsumerGroup(
@@ -94,8 +96,20 @@ Where: -v   Run verbosely
         n("batch_count").toString(),
         n("topic_type").toString(),
         latch,
-        cg_GlobalConfig).launch
+        cg_GlobalConfig,
+        consPingArray).launch
     }
+    logger.info("------------------------------------------------------------")
+    while (true) {
+      Thread.sleep(5000)
+      consPingArray.foreach { x =>
+        if (x.numMessages != 0) {
+          logger.debug("flush thread = " + x.trnumGlobal_ + " : " + x.numMessages)
+          x.flush
+        }
+      }
+    }
+
     latch.await()
 
     endOfJob("all threads are finished! ")

@@ -81,7 +81,7 @@ class ProcessingSQLInsert extends Processing {
     logger.debug("toAvroSchemas.toList = " + toAvroSchemas.toList.mkString(","))
 
     try {
-      var connection: Connection = CFactory.arrayConnection(threadId)
+      var connection: Connection = CFactory.arrayConnection(threadId-1)
       var pstmt = connection.prepareCall("{? = call dbo.ConsumerMSSQL2(?,?)}")
       pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
       pstmt.setString(2, toAvroSchemas.toList.mkString(","))
