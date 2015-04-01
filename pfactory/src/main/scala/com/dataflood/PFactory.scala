@@ -106,7 +106,7 @@ Where: -v   Run verbosely
       props_produser.put("metadata.broker.list", brk)
       props_produser.put("serializer.class", "kafka.serializer.DefaultEncoder")
       props_produser.put("request.required.acks", "1")
-      props_produser.put("producer.type", "async")
+      props_produser.put("producer.type", "sync")
       props_produser.put("queue.buffering.max.messages", "10000")
       props_produser.put("queue.buffering.max.ms", "100")
       props_produser.put("batch.num.messages", "500")

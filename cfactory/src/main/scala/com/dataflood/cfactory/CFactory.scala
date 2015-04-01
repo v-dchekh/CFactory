@@ -18,7 +18,7 @@ object CFactory {
     Thread.sleep(6000)
     arrayConsPing.foreach { x =>
       if (x != null) x.close()
-      logger.info("thread : " + x.trnumGlobal_ + " stopped")
+      logger.info("thread : " + x.trnumGlobal_ + " stopped, total messages consumed = " + x.numMessagesTotal)
     }
     Thread.sleep(1000)
     logger.info("------------all threads stopped------------")

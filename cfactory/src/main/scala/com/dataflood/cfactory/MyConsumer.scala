@@ -27,6 +27,7 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
   val trnumGlobal_ = trnumGlobal
 //  val messagArray = ArrayBuffer[GenericRecord]()
   val messagArray_schemaId = ArrayBuffer[Map[Int, GenericRecord]]()
+  var numMessagesTotal: Int = 0
   val p1 = new Processing
 
   def run() {
@@ -37,7 +38,6 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
   def read = {
     //-----------    info("reading on stream now")-------------//
     //    var numMessages: Int = 0
-    var numMessagesTotal: Int = 0
     for (messageAndTopic <- stream) //    while (!stream.isEmpty)
     {
       try {
@@ -52,7 +52,7 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
 
         if (numMessages == batch_count) {
           flush
-          logger.info(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
+          logger.debug(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
         }
       } catch {
         case e: Throwable =>
