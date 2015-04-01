@@ -96,23 +96,23 @@ object Configurations {
     arrayConnection
   }
   
-  def getSchemaPath(cfg_XML: Elem = CFactory.cfg_XML) = ((cfg_XML \\ "schemas") \ "@path").text
+  def getSchemaPath(cfgXML: Elem = CFactory.cfgXML) = ((cfgXML \\ "schemas") \ "@path").text
 
-  def getSchemaList(cfg_XML: Elem = CFactory.cfg_XML) = {
+  def getSchemaList(cfgXML: Elem = CFactory.cfgXML) = {
     val schema_path = getSchemaPath()
-    val schema_list_XML = (cfg_XML \\ "schemas" \\ "schema")
+    val schema_list_XML = (cfgXML \\ "schemas" \\ "schema")
     var schema_list_Map = new HashMap[Int, Schema]
     schema_list_XML.foreach { n =>
       val schema = Schema.parse(new File(schema_path + (n \ "@file").text))
       val schema_id = (n \ "@id").text.toInt
       schema_list_Map += (schema_id -> schema)
     }
-    //println("getSchemaList(cfg_XML: Elem)")
+    //println("getSchemaList(cfgXML: Elem)")
     schema_list_Map
   }
 
-  def getcons_groupList(cfg_XML: Elem = CFactory.cfg_XML) = {
-    val cons_groupList = (cfg_XML \\ "consumer_groups" \\ "consumer_group")
+  def getcons_groupList(cfgXML: Elem = CFactory.cfgXML) = {
+    val cons_groupList = (cfgXML \\ "consumer_groups" \\ "consumer_group")
     val groupList = new ArrayBuffer[Map[String, Any]]()
 
     cons_groupList.foreach { n =>
@@ -136,15 +136,15 @@ object Configurations {
     groupList
   }
 
-  def getThread_number(cfg_XML: Elem = CFactory.cfg_XML) = {
-    val cons_groupList = (cfg_XML \\ "consumer_groups" \\ "consumer_group")
+  def getThread_number(cfgXML: Elem = CFactory.cfgXML) = {
+    val cons_groupList = (cfgXML \\ "consumer_groups" \\ "consumer_group")
     var thread_number: Int = 0
     cons_groupList.foreach { n => thread_number += ((n \ "@thread_number").text).toInt }
     thread_number
   }
 
-  def getcons_GlobalConfig(cfg_XML: Elem = CFactory.cfg_XML) = {
-    val cons_propertiesList = (cfg_XML \\ "consumer_config" \\ "property")
+  def getcons_GlobalConfig(cfgXML: Elem = CFactory.cfgXML) = {
+    val cons_propertiesList = (cfgXML \\ "consumer_config" \\ "property")
     val props = new Properties()
     cons_propertiesList.foreach { n =>
       props.put((n \ "@name").text, (n \ "@value").text)

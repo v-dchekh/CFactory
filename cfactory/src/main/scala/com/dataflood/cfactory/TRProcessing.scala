@@ -46,7 +46,7 @@ class ProcessingSystem extends Processing {
       prettyJsonString
     }
 
-    def schemasListRefresh = CFactory.schema_list = Configurations.getSchemaList()
+    def schemasListRefresh = CFactory.schemaList = Configurations.getSchemaList()
 
     //------------- Added new schema ----------------)      
     def schemasListAdd {
@@ -62,17 +62,17 @@ class ProcessingSystem extends Processing {
       Files.write(Paths.get(path), schema_json.getBytes(StandardCharsets.UTF_8))
 
       //------------- Adde new schema record to the config file ----------------)      
-      var schema_list_XML = (CFactory.cfg_XML \\ "schemas")
-      var consumer_groups_XML = (CFactory.cfg_XML \\ "consumer_groups")
-      var consumer_config_XML = (CFactory.cfg_XML \\ "consumer_config")
+      var schemaList_XML = (CFactory.cfgXML \\ "schemas")
+      var consumer_groups_XML = (CFactory.cfgXML \\ "consumer_groups")
+      var consumer_config_XML = (CFactory.cfgXML \\ "consumer_config")
 
       var newSchema = createElement(Some(fieldAvroNameValue), Some("5"))
-      var root: Node = schema_list_XML(0)
-      schema_list_XML = addChild(root, newSchema)
-      schema_list_XML = <body>{ consumer_config_XML }{ consumer_groups_XML }{ schema_list_XML }</body>
+      var root: Node = schemaList_XML(0)
+      schemaList_XML = addChild(root, newSchema)
+      schemaList_XML = <body>{ consumer_config_XML }{ consumer_groups_XML }{ schemaList_XML }</body>
 
       val prettyPrinter = new xml.PrettyPrinter(180, 4)
-      val prettyXml = prettyPrinter.formatNodes(schema_list_XML)
+      val prettyXml = prettyPrinter.formatNodes(schemaList_XML)
       XML.save(CFactory.filename, XML.loadString(prettyXml), "UTF-8", true, null)
       //      logger.debug(prettyXml)
       schemasListRefresh
@@ -114,7 +114,7 @@ class ProcessingSystem extends Processing {
             case "refresh" => schemasListRefresh
             case _         => println(s"topic_type is not in (refresh)")
           }
-          //println(CFactory.schema_list.mkString("\n"))
+          //println(CFactory.schemaList.mkString("\n"))
         }
       }
     }

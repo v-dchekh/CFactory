@@ -20,7 +20,7 @@ object AvroWrapper {
     out.write(ByteBuffer.allocate(4).putInt(schemaId).array())
 
     val encoder = EncoderFactory.get().directBinaryEncoder(out, null)
-    val schemaOpt = CFactory.schema_list.get(schemaId)
+    val schemaOpt = CFactory.schemaList.get(schemaId)
     if (schemaOpt.isEmpty) throw new IllegalArgumentException("Invalid schema id")
 
     val writer = new GenericDatumWriter[GenericRecord](schemaOpt.get)
@@ -48,7 +48,7 @@ object AvroWrapper {
     val schemaIdArray = new Array[Byte](4)
     decoder.readFixed(schemaIdArray)
 
-    val schemaOpt = CFactory.schema_list.get(ByteBuffer.wrap(schemaIdArray).getInt)
+    val schemaOpt = CFactory.schemaList.get(ByteBuffer.wrap(schemaIdArray).getInt)
     schemaOpt match {
       case None => throw new IllegalArgumentException("Invalid schema id")
       case Some(schema) =>
@@ -68,7 +68,7 @@ object AvroWrapper {
     
     var schemaId = ByteBuffer.wrap(schemaIdArray).getInt
 
-    val schemaOpt = CFactory.schema_list.get(schemaId)
+    val schemaOpt = CFactory.schemaList.get(schemaId)
     schemaOpt match {
       case None => throw new IllegalArgumentException("Invalid schema id")
       case Some(schema) =>

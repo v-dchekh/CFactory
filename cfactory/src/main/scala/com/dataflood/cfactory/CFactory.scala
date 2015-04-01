@@ -6,32 +6,42 @@ import scala.xml.Elem
 import scala.xml.XML
 import org.apache.avro.Schema
 import org.apache.log4j.Logger
-import java.sql.Statement
 import java.sql.Connection
-import scala.actors.threadpool.TimeUnit
-import java.lang.InterruptedException
 
 object CFactory {
   protected val logger = Logger.getLogger(getClass.getName)
+  // ---------- ShutdownHook, shutdown with ctrl+c----------------
   sys addShutdownHook (shutdown)
+  def shutdown() {
+    logger.info("stop a flush process")
+    shutDownFlag = true
+    Thread.sleep(6000)
+    arrayConsPing.foreach { x =>
+      if (x != null) x.close()
+      logger.info("thread : " + x.trnumGlobal_ + " stopped")
+    }
+    Thread.sleep(1000)
+    logger.info("------------all threads stopped------------")
+  }
 
   val usage = """
-Usage: parser [-v] [-f file] [-s sopt] ...
-Where: -v   Run verbosely
-       -f F Set input file to F
-       -s S Set Show option to S
-"""
+              Usage: parser [-v] [-f file] [-s sopt] ...
+              Where: -v   Run verbosely
+                     -f F Set input file to F
+                     -s S Set Show option to S
+              """
 
-  var schema_list: HashMap[Int, Schema] = null // = SchemaListObj.list
-  var cfg_XML: Elem = null
-  var arrayStatement: Array[Statement] = null
+  var schemaList: HashMap[Int, Schema] = null // = SchemaListObj.list
+  var cfgXML: Elem = null
   var arrayConnection: Array[Connection] = null
-  var consPingArray: Array[MyConsumer[String]] = null
+  var arrayConsPing: Array[MyConsumer[String]] = null
 
   var filename: String = ""
   var showme: String = ""
   var debug: Boolean = false
-  var thread_numberGlobal: Int = 0
+  var threadNumberGlobal: Int = 0
+
+  var shutDownFlag: Boolean = false
 
   val unknown = "(^-[^\\s])".r
 
@@ -55,14 +65,6 @@ Where: -v   Run verbosely
     sys.exit(1)
   }
 
-  def shutdown() {
-    consPingArray.foreach { x =>
-      if (x != null) x.close()
-      logger.info("thread : " + x.trnumGlobal_ + " is shuted down")
-    }
-    Thread.sleep(1000)
-  }
-
   def main(args: Array[String]) {
     //---------- read and parce arguments ---------------// 
     val arglist = args.toList
@@ -78,10 +80,10 @@ Where: -v   Run verbosely
     println("remainingopts=" + remainingopts)
 
     //--------------------- read the config file -------------------// 
-    cfg_XML = XML.loadFile(filename)
+    cfgXML = XML.loadFile(filename)
 
     //--------------------- get avro schemas---- -------------------// 
-    schema_list = Configurations.getSchemaList()
+    schemaList = Configurations.getSchemaList()
 
     //--------------------- get total number threads----------------// 
     val latch = new CountDownLatch(Configurations.getThread_number())
@@ -91,46 +93,35 @@ Where: -v   Run verbosely
 
     //--------------------- get a list of consumer's properties-----//
 
-    val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
+//    val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
 
-    //--------------------- get a arrayStatement to MS SQL ---------//
-    //    arrayStatement = Configurations.getArayStatementMSSQL(latch.getCount.toInt)
+    //--------------------- get an arrayConnection to MS SQL ---------//
     arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
+
     //--------------------- run consumer groups---------------------// 
-    consPingArray = new Array[MyConsumer[String]](latch.getCount.toInt)
+    arrayConsPing = new Array[MyConsumer[String]](latch.getCount.toInt)
 
     groupList.foreach { n =>
       val cg = new ConsumerGroup(
-        n("thread_number").toString().toInt,
-        n("zkconnect").toString(),
-        n("groupId").toString(),
-        n("topic").toString(),
-        n("batch_count").toString(),
-        n("topic_type").toString(),
+        n,
         latch,
-        cg_GlobalConfig,
-        consPingArray).launch
+        arrayConsPing).launch
     }
-    logger.info("------------------------------------------------------------")
-    /*
-    while (true) {
+    logger.info("------------all threads started------------")
+    //--------------------- run flush messages each 5 second-----------------//
+    while (!shutDownFlag) {
       Thread.sleep(5000)
-      consPingArray.foreach { x =>
+      arrayConsPing.foreach { x =>
         if (x.numMessages != 0) {
           logger.debug("flush thread = " + x.trnumGlobal_ + " : " + x.numMessages)
           x.flush
         }
       }
-    }*/ /*
-    try {
-      Thread.sleep(10000)
-    } catch {
-      case e: InterruptedException => logger.debug("Interrupted, closing");
     }
-    shutdown()*/
+    logger.info("flush process stopped")
 
     latch.await()
-    //endOfJob("all threads are finished! ")
+    
   }
 
 }

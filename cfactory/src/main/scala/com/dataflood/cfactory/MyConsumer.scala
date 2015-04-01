@@ -25,25 +25,13 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
   val stream = connector.createMessageStreamsByFilter(filterSpec, 1).get(0)
   var numMessages: Int = 0
   val trnumGlobal_ = trnumGlobal
-  val messagArray = ArrayBuffer[GenericRecord]()
+//  val messagArray = ArrayBuffer[GenericRecord]()
   val messagArray_schemaId = ArrayBuffer[Map[Int, GenericRecord]]()
   val p1 = new Processing
 
   def run() {
-
-    while (true) {
-      //      read(messageArray => p1.run(messageArray, topic_type, threadId))
-      read
-      //connector.commitOffsets
-    }
+    read
     cdl.countDown()
-  }
-
-  def flush {
-    p1.run(messagArray_schemaId, topic_type, trnumGlobal_)
-    numMessages = 0
-    messagArray.clear()
-    messagArray_schemaId.clear()
   }
 
   def read = {
@@ -53,23 +41,17 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
     for (messageAndTopic <- stream) //    while (!stream.isEmpty)
     {
       try {
-        var message = AvroWrapper.decode(messageAndTopic.message)
+//        var message = AvroWrapper.decode(messageAndTopic.message)
         var message_schemaId = AvroWrapper.decode_schemaId(messageAndTopic.message)
         var part = messageAndTopic.partition
         numMessages += 1
         numMessagesTotal += 1
-        messagArray += message
+  //      messagArray += message
         messagArray_schemaId += message_schemaId
         logger.debug(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
 
         if (numMessages == batch_count) {
           flush
-
-          /*          numMessages = 0
-          messagArray.clear()
-          messagArray_schemaId.clear()
-          * 
-          */
           logger.info(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
         }
       } catch {
@@ -81,7 +63,16 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
     }
   }
 
+  //---------------- close kafka connection ---------------------------------------------
   def close() {
     connector.shutdown()
   }
+  //---------------- flush messages in case of batch count or time ---------------------- 
+  def flush {
+    p1.run(messagArray_schemaId, topic_type, trnumGlobal_)
+    numMessages = 0
+//    messagArray.clear()
+    messagArray_schemaId.clear()
+  }
+
 }
