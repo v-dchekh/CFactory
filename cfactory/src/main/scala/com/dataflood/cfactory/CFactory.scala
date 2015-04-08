@@ -42,6 +42,7 @@ object CFactory {
   var threadNumberGlobal: Int = 0
 
   var shutDownFlag: Boolean = false
+//  var flushFlag: Boolean = false
 
   val unknown = "(^-[^\\s])".r
 
@@ -93,7 +94,7 @@ object CFactory {
 
     //--------------------- get a list of consumer's properties-----//
 
-//    val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
+    //    val cg_GlobalConfig = Configurations.getcons_GlobalConfig()
 
     //--------------------- get an arrayConnection to MS SQL ---------//
     arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
@@ -109,19 +110,24 @@ object CFactory {
     }
     logger.info("------------all threads started------------")
     //--------------------- run flush messages each 5 second-----------------//
+    //   oldDate = new java.util.Date().getTime()
     while (!shutDownFlag) {
       Thread.sleep(5000)
       arrayConsPing.foreach { x =>
-        if (x.numMessages != 0) {
-          logger.debug("flush thread = " + x.trnumGlobal_ + " : " + x.numMessages)
+        x.flushOnTime
+        /*
+        if (x.numMessages != 0 && (newDate - x.flushDate) >= 3000 && !x.flushFlag) {
+          logger.info("-----thread : " + x.trnumGlobal_ + ", numMessages " + x.numMessages + ", (newDate - flushDate) = " + (newDate - x.flushDate))
           x.flush
         }
+        * 
+        */
       }
     }
     logger.info("flush process stopped")
 
     latch.await()
-    
+
   }
 
 }
