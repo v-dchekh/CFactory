@@ -54,10 +54,6 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cgConfig: Properties, tr
     cdl.countDown()
   }
 
-  //---------------- close kafka connection ---------------------------------------------
-  def close() {
-    connector.shutdown()
-  }
   //---------------- flush messages in case of batch count or time ---------------------- 
   def flushOnTime {
     if (numMessages == batchCount && !flushFlag) {
@@ -82,6 +78,10 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cgConfig: Properties, tr
     messagArraySchemaId.clear()
     flushTime = new Date().getTime()
     flushFlag = false
+  }
+
+  def close() {
+    connector.shutdown()
   }
 
 }
