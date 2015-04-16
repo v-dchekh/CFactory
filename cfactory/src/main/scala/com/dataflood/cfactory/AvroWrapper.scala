@@ -56,7 +56,7 @@ object AvroWrapper {
         reader.read(null, decoder)
     }
   }
-  def decode_schemaId(bytes: Array[Byte]): Map[Int,GenericRecord] = {
+  def decodeSchemaId(bytes: Array[Byte]): Map[Int,GenericRecord] = {
     val decoder = DecoderFactory.get().binaryDecoder(bytes, null)
     val magic = new Array[Byte](1)
     decoder.readFixed(magic)

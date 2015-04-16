@@ -112,7 +112,7 @@ class ProcessingSystem extends Processing {
             case "add"     => schemasListAdd
             case "delete"  => schemasListDelete
             case "refresh" => schemasListRefresh
-            case _         => println(s"topic_type is not in (refresh)")
+            case _         => logger.error("action is not in (add,delete,refresh) = "+ fieldActionValue) 
           }
           //println(CFactory.schemaList.mkString("\n"))
         }

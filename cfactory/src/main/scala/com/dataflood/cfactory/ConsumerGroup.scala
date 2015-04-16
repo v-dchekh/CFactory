@@ -14,29 +14,29 @@ class ConsumerGroup(topicCfg: Map[String, Any],
 
   //  info("setup:start topic=%s for zk=%s and groupId=%s".format(topic, a_zookeeper, a_groupId))
   protected val logger = Logger.getLogger(getClass.getName)
-  var threadNumber: Int = topicCfg("thread_number").toString().toInt
-  var zookeeper: String = topicCfg("zkconnect").toString()
-  var groupId: String = topicCfg("groupId").toString()
-  var topic: String = topicCfg("topic").toString()
-  var batch_count: String = topicCfg("batch_count").toString()
-  var topic_type: String = topicCfg("topic_type").toString()
+  val threadNumber: Int = topicCfg("thread_number").toString().toInt
+  val zookeeper: String = topicCfg("zkconnect").toString()
+  val groupId: String = topicCfg("groupId").toString()
+  val topic: String = topicCfg("topic").toString()
+  val batchCount: String = topicCfg("batch_count").toString()
+  val topicType: String = topicCfg("topic_type").toString()
 
   def createConsumerConfig: Properties = {
     val props = Configurations.getcons_GlobalConfig()
     props.setProperty("group.id", groupId)
     props.setProperty("topic", topic)
-    props.setProperty("batch_count", batch_count)
-    props.setProperty("topic_type", topic_type)
+    props.setProperty("batch_count", batchCount)
+    props.setProperty("topic_type", topicType)
     props
   }
 
   def launch {
-    var cg_config = createConsumerConfig
+    val cg_config = createConsumerConfig
     for (i <- 1 to threadNumber by 1) {
       CFactory.threadNumberGlobal += 1
-      var trnumGlobal = CFactory.threadNumberGlobal
+      val trnumGlobal = CFactory.threadNumberGlobal
       try {
-        var myConsumer = new MyConsumer[String](trnumGlobal, latch, cg_config, trnumGlobal)
+        val myConsumer = new MyConsumer[String](trnumGlobal, latch, cg_config, trnumGlobal)
         arrayConsPing(trnumGlobal - 1) = myConsumer
         new Thread(myConsumer).start()
         logger.info(s"started global trN#: $trnumGlobal , groupId : $groupId, thread : $i")

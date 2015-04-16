@@ -7,56 +7,43 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import org.apache.avro.Schema
-import org.apache.avro.generic.{ GenericRecord }
+import org.apache.avro.generic.GenericRecord
 import org.apache.log4j.Logger
 import java.util.Date
 
-class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, trnumGlobal: Int) extends Runnable {
+class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cgConfig: Properties, trnumGlobal: Int) extends Runnable {
 
   protected val logger = Logger.getLogger(getClass.getName)
-  val config = new ConsumerConfig(cg_config)
-  val connector = Consumer.create(config)
-  val filterSpec = new Whitelist(cg_config.getProperty("topic"))
-  val batch_count = cg_config.getProperty("batch_count").toInt
-  val topic_type = cg_config.getProperty("topic_type").toInt
-  val stream = connector.createMessageStreamsByFilter(filterSpec, 1).get(0)
-  var numMessages: Int = 0
+  private val connector = Consumer.create(new ConsumerConfig(cgConfig))
+  private val batchCount = cgConfig.getProperty("batch_count").toInt
+  private val topicType = cgConfig.getProperty("topic_type").toInt
+  private val filterSpec = new Whitelist(cgConfig.getProperty("topic"))
+  private val stream = connector.createMessageStreamsByFilter(filterSpec, 1).get(0)
+  private var numMessages: Int = 0
+  var numMessagesTotal: Int = 0
   val trnumGlobal_ = trnumGlobal
   //  val messagArray = ArrayBuffer[GenericRecord]()
-  val messagArray_schemaId = ArrayBuffer[Map[Int, GenericRecord]]()
-  var numMessagesTotal: Int = 0
-  val p1 = new Processing
-  var flushTime: Long = new Date().getTime()
-  var flushFlag: Boolean = false
+  private val messagArraySchemaId = ArrayBuffer[Map[Int, GenericRecord]]()
+  private val p1 = new Processing
+  private var flushTime: Long = new Date().getTime()
+  private var flushFlag: Boolean = false
 
   def run() {
-    read
-    cdl.countDown()
-  }
-
-  def read = {
     //-----------    info("reading on stream now")-------------//
     //    var numMessages: Int = 0
     for (messageAndTopic <- stream) //    while (!stream.isEmpty)
     {
       try {
         //        var message = AvroWrapper.decode(messageAndTopic.message)
-        var message_schemaId = AvroWrapper.decode_schemaId(messageAndTopic.message)
-        var part = messageAndTopic.partition
+        val message_schemaId = AvroWrapper.decodeSchemaId(messageAndTopic.message)
+        val part = messageAndTopic.partition
         numMessages += 1
         numMessagesTotal += 1
         //      messagArray += message
-        messagArray_schemaId += message_schemaId
-        //        flushTime = new java.util.Date().getTime()
+        messagArraySchemaId += message_schemaId
         logger.debug(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
 
         flushOnTime
-        /*        if (numMessages == batch_count && !flushFlag) {
-          flush
-          logger.debug(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
-        }
-        * 
-        */
       } catch {
         case e: Throwable =>
           if (true)
@@ -64,6 +51,7 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
           else throw e
       }
     }
+    cdl.countDown()
   }
 
   //---------------- close kafka connection ---------------------------------------------
@@ -71,19 +59,27 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cg_config: Properties, t
     connector.shutdown()
   }
   //---------------- flush messages in case of batch count or time ---------------------- 
-  def flushOnTime  {
-    var now = new Date().getTime()
-    if ((numMessages > 0 && (now - flushTime) > 5000 && !flushFlag) || numMessages == batch_count && !flushFlag ) {
+  def flushOnTime {
+    if (numMessages == batchCount && !flushFlag) {
+      var now = new Date().getTime()
       logger.info("-----thread : " + trnumGlobal_ + ", numMessages " + numMessages + ", (now - flushDate) = " + (now - flushTime))
       flush
+    } else {
+      if ((numMessages > 0 && !flushFlag)) {
+        var now = new Date().getTime()
+        if ((now - flushTime) > 5000) {
+          logger.info("-----thread : " + trnumGlobal_ + ", numMessages " + numMessages + ", (now - flushDate) = " + (now - flushTime))
+          flush
+        }
+      }
     }
   }
 
   def flush {
     flushFlag = true
-    p1.run(messagArray_schemaId, topic_type, trnumGlobal_)
+    p1.run(messagArraySchemaId, topicType, trnumGlobal_)
     numMessages = 0
-    messagArray_schemaId.clear()
+    messagArraySchemaId.clear()
     flushTime = new Date().getTime()
     flushFlag = false
   }
