@@ -10,6 +10,6 @@
 		<schema id="6" file="dbo_group2_CT.avsc"/>
 	</schemas>
 	<config>
-	    <sql_connect url="jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB_R1;user=scala;password=111111;"/>
+	    <sql_connect url="jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"/>
 	</config>
 </producer_groups>

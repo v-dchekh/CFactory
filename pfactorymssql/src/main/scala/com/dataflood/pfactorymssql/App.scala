@@ -50,7 +50,6 @@ object App extends App {
   var cfgXML: Elem = null
 
   if (filename.length == 0) filename = getClass.getResource("/producer_msg.xml").getFile
-  
 
   logger.info("PFactoryMSSQL v0.1")
   println("PFactoryMSSQL v0.1")
@@ -61,7 +60,10 @@ object App extends App {
 
   //--------------------- read the config file -------------------// 
   cfgXML = XML.loadFile(filename)
-  val arrayConnection = Configurations.getArayConnectionMSSQL()
-  
-  Thread.sleep(10000)
+  //--------------------- get total number threads----------------// 
+  val latch = new CountDownLatch(Configurations.getThread_number)
+
+  val arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
+  //--------------------- get avro schemas---- -------------------//
+  val schemaList: HashMap[Int, Schema] = Configurations.getSchemaList()
 }

@@ -10,70 +10,15 @@ import java.sql.DriverManager
 import java.sql.Connection
 import java.sql.Statement
 import org.apache.log4j.Logger
-
+import java.sql.ResultSet
 
 object Configurations {
   protected val logger = Logger.getLogger(getClass.getName)
 
   def getСonnectionStringMSSQL(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "config" \\ "sql_connect") \ "@url").text
 
-  def getConnectMSSQL: Statement = {
-    val url = getСonnectionStringMSSQL()
-
-    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-
-    // there's probably a better way to do this
-    var connection: Connection = null
-    var statement: Statement = null
-
-    try {
-      // make the connection
-      //Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
-      connection = DriverManager.getConnection(url)
-      // create the statement, and run the select query
-      statement = connection.createStatement()
-      /*
-      val resultSet = statement.executeQuery("SELECT top(1) userid, username  from user_")
-      while (resultSet.next()) {
-        val userid = resultSet.getString("userid")
-        val username = resultSet.getString("username")
-        println("host, user = " + userid + ", " + username)
-      }
-      * 
-      */
-    } catch {
-      case e: Throwable =>
-        if (true) println(e)
-        else throw e
-    }
-    statement
-  }
-
-  def getArayStatementMSSQL(arraySize: Int = 10): Array[Statement] = {
-    val url = getСonnectionStringMSSQL()
-
-    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-
-    // there's probably a better way to do this
-    var arrayStatement = new Array[Statement](arraySize)
-    var connection: Connection = null
-    var statement: Statement = null
-
-    for (i <- 0 to arraySize - 1 by 1) {
-      try {
-        connection = DriverManager.getConnection(url)
-        arrayStatement(i) = connection.createStatement()
-      } catch {
-        case e: Throwable =>
-          if (true) println(e)
-          else throw e
-      }
-    }
-    arrayStatement
-  }
-
   def getArayConnectionMSSQL(arraySize: Int = 10): Array[Connection] = {
-    logger.info("Creation of SQL connection pool started")
+    logger.info(s"Creation of SQL connection pool started (N = $arraySize)")
     val url = getСonnectionStringMSSQL()
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
@@ -100,6 +45,7 @@ object Configurations {
   def getSchemaPath(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "schemas") \ "@path").text
 
   def getSchemaList(cfgXML: Elem = App.cfgXML) = {
+    logger.info("Creation of avro schemas list started")
     val schema_path = getSchemaPath()
     val schema_list_XML = (cfgXML \\ "schemas" \\ "schema")
     var schema_list_Map = new HashMap[Int, Schema]
@@ -109,6 +55,7 @@ object Configurations {
       schema_list_Map += (schema_id -> schema)
     }
     //println("getSchemaList(cfgXML: Elem)")
+    logger.info("Creation of avro schemas list finished")
     schema_list_Map
   }
 
@@ -137,10 +84,51 @@ object Configurations {
     groupList
   }
 
-  def getThread_number(cfgXML: Elem = App.cfgXML) = {
-    val cons_groupList = (cfgXML \\ "consumer_groups" \\ "consumer_group")
+  def getThread_number = {
+    val arrayConnection = Configurations.getArayConnectionMSSQL(1)
+    /*
+    try {
+      var connection: Connection = arrayConnection(0)
+      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableList(?)}")
+      pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
+      pstmt.setString(2, "1")
+      var rs : ResultSet = pstmt.executeQuery()
+      while (rs.next()) {
+         System.out.println("EMPLOYEE:");
+         System.out.println(rs.getString("LastName") + ", " + rs.getString("FirstName"));
+         System.out.println("MANAGER:");
+         System.out.println(rs.getString("ManagerLastName") + ", " + rs.getString("ManagerFirstName"));
+         System.out.println();
+      }
+
+      val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
+      logger.debug(resultSet)
+      rs.close();
+      pstmt.close
+
+    } catch {
+      case e: Throwable =>
+        if (true) logger.info(e)
+        else throw e
+    }
+*/
     var thread_number: Int = 0
-    cons_groupList.foreach { n => thread_number += ((n \ "@thread_number").text).toInt }
+    try {
+      var connection: Connection = arrayConnection(0)
+      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableNumber(?)}")
+      pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
+      pstmt.registerOutParameter(2, java.sql.Types.INTEGER);
+      pstmt.execute()
+      val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
+      thread_number = pstmt.getInt(2)
+      logger.debug(resultSet)
+      pstmt.close
+
+    } catch {
+      case e: Throwable =>
+        if (true) logger.info(e)
+        else throw e
+    }
     thread_number
   }
 
