@@ -9,15 +9,18 @@ import java.util.Properties
 import java.sql.DriverManager
 import java.sql.Connection
 import java.sql.Statement
+import org.apache.log4j.Logger
+
 
 object Configurations {
+  protected val logger = Logger.getLogger(getClass.getName)
+
+  def getСonnectionStringMSSQL(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "config" \\ "sql_connect") \ "@url").text
 
   def getConnectMSSQL: Statement = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+    val url = getСonnectionStringMSSQL()
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    val username = "scala"
-    val password = "111111"
 
     // there's probably a better way to do this
     var connection: Connection = null
@@ -46,19 +49,17 @@ object Configurations {
     statement
   }
 
-  def getArayStatementMSSQL (arraySize : Int = 10): Array[Statement] = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+  def getArayStatementMSSQL(arraySize: Int = 10): Array[Statement] = {
+    val url = getСonnectionStringMSSQL()
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    val username = "scala"
-    val password = "111111"
 
     // there's probably a better way to do this
     var arrayStatement = new Array[Statement](arraySize)
     var connection: Connection = null
     var statement: Statement = null
 
-    for (i <- 0 to arraySize-1 by 1) {
+    for (i <- 0 to arraySize - 1 by 1) {
       try {
         connection = DriverManager.getConnection(url)
         arrayStatement(i) = connection.createStatement()
@@ -71,19 +72,17 @@ object Configurations {
     arrayStatement
   }
 
-  def getArayConnectionMSSQL (arraySize : Int = 10): Array[Connection] = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
-
+  def getArayConnectionMSSQL(arraySize: Int = 10): Array[Connection] = {
+    logger.info("Creation of SQL connection pool started")
+    val url = getСonnectionStringMSSQL()
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    val username = "scala"
-    val password = "111111"
 
     // there's probably a better way to do this
     var arrayConnection = new Array[Connection](arraySize)
     var connection: Connection = null
     var statement: Statement = null
 
-    for (i <- 0 to arraySize-1 by 1) {
+    for (i <- 0 to arraySize - 1 by 1) {
       try {
         connection = DriverManager.getConnection(url)
         arrayConnection(i) = connection
@@ -93,9 +92,11 @@ object Configurations {
           else throw e
       }
     }
+    logger.info("Creation of SQL connection pool finished")
+
     arrayConnection
   }
-  
+
   def getSchemaPath(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "schemas") \ "@path").text
 
   def getSchemaList(cfgXML: Elem = App.cfgXML) = {

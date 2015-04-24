@@ -1,11 +1,13 @@
 package com.dataflood.pfactorymssql
 
+import java.util.concurrent.CountDownLatch
+import scala.collection.mutable.HashMap
+import scala.xml.Elem
+import scala.xml.XML
+import org.apache.avro.Schema
 import org.apache.log4j.Logger
+import java.sql.Connection
 
-/**
- * Hello world!
- *
- */
 object App extends App {
   protected val logger = Logger.getLogger(getClass.getName)
 
@@ -45,7 +47,10 @@ object App extends App {
   val arglist = args.toList
   val remainingopts = parseArgs(arglist, pf)
 
-  //  if (filename.length == 0) filename = getClass.getResource("/consumer_groups.xml").getFile
+  var cfgXML: Elem = null
+
+  if (filename.length == 0) filename = getClass.getResource("/producer_msg.xml").getFile
+  
 
   logger.info("PFactoryMSSQL v0.1")
   println("PFactoryMSSQL v0.1")
@@ -54,4 +59,9 @@ object App extends App {
   println("filename=" + filename)
   println("remainingopts=" + remainingopts)
 
+  //--------------------- read the config file -------------------// 
+  cfgXML = XML.loadFile(filename)
+  val arrayConnection = Configurations.getArayConnectionMSSQL()
+  
+  Thread.sleep(10000)
 }

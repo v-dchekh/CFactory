@@ -147,8 +147,23 @@ Where: -v   Run verbosely
           rec.put("name", "user5.avsc")
           rec.put("schema_body", schema.toString())
         }
+        case 4 => {
+          rec.put("msg", "groupName")
+        }
+        case 5 => {
+          rec.put("msg", "groupName")
+        }
+        case 6 => {
+          rec.put("__start_lsn", "0x000004CD0000900A0001")
+          rec.put("__end_lsn", "0x000004CD0000900A0002")
+          rec.put("__seqval", "0x000004CD0000900A0003")
+          rec.put("__operation", 2)
+          rec.put("__update_mask", "0x03")
+          rec.put("id", 1)
+          rec.put("name", msg)
+        }
       }
-      //println("rec ----| " + rec)
+      println("rec ----| " + rec)
 
       pr2.send(AvroWrapper.encode(rec, schema_id.toInt, schema_list), part_number.getBytes(), part_number)
       msgc_count += 1

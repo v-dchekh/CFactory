@@ -41,7 +41,7 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cgConfig: Properties, tr
         numMessagesTotal += 1
         //      messagArray += message
         messagArraySchemaId += message_schemaId
-        logger.debug(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
+        logger.info(("topic : " + messageAndTopic.topic + "--| " + messageAndTopic.offset.toString + s"; partition - $part , thread = $threadId , total = $numMessagesTotal"))
 
         flushOnTime
       } catch {

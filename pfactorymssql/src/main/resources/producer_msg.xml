@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<producer_groups>
+	<schemas path = "d:/Users/Dzmitry_Chekh/Avro_schemas/PF/">
+        <schema id="0" file="user3.avsc"/>
+        <schema id="1" file="user.avsc"/>
+        <schema id="2" file="user2.avsc"/>
+        <schema id="3" file="new_schema.avsc"/>
+        <schema id="4" file="user4.avsc"/>
+		<schema id="5" file="dbo_user__CT.avsc"/>
+		<schema id="6" file="dbo_group2_CT.avsc"/>
+	</schemas>
+	<config>
+	    <sql_connect url="jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB_R1;user=scala;password=111111;"/>
+	</config>
+</producer_groups>

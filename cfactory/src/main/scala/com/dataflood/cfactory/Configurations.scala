@@ -13,7 +13,7 @@ import java.sql.Statement
 object Configurations {
 
   def getConnectMSSQL: Statement = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB_R1;user=scala;password=111111;"
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     val username = "scala"
@@ -47,7 +47,7 @@ object Configurations {
   }
 
   def getArayStatementMSSQL (arraySize : Int = 10): Array[Statement] = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB_R1;user=scala;password=111111;"
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     val username = "scala"
@@ -72,7 +72,7 @@ object Configurations {
   }
 
   def getArayConnectionMSSQL (arraySize : Int = 10): Array[Connection] = {
-    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB;user=scala;password=111111;"
+    val url = "jdbc:sqlserver://EPBYMINW2224;databaseName=DemoDB_R1;user=scala;password=111111;"
 
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     val username = "scala"

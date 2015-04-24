@@ -38,6 +38,7 @@ class ProcessingSQLInsert extends Processing {
         val fieldValueSQL = fieldType_.toString() match {
           case "STRING" => {
             if (fieldValue == "%null%") "null"
+            if (fieldValue.startsWith("0x")) fieldValue   
             else "'" + fieldValue.replace("'", "'''") + "'"
           }
           case _ => fieldValue
@@ -77,8 +78,8 @@ class ProcessingSQLInsert extends Processing {
     logger.debug("-----------------------------------------------------------------------------------------")
     //    logger.debug(toSQLAny.toList.mkString("\n").replace("),", ")|"))
     //    logger.debug(toSQLAny.toList.mkString("\n").replace("),(", ") values (").toString())
-    logger.debug(toSQLValues.toList.mkString("\n"))
-    logger.debug("toAvroSchemas.toList = " + toAvroSchemas.toList.mkString(","))
+    logger.info(toSQLValues.toList.mkString("\n"))
+    logger.info("toAvroSchemas.toList = " + toAvroSchemas.toList.mkString(","))
 
     try {
       var connection: Connection = CFactory.arrayConnection(threadId-1)
