@@ -80,6 +80,9 @@ object CFactory {
     println("filename=" + filename)
     println("remainingopts=" + remainingopts)
 
+    
+    //val ks :KafkaSpark = new KafkaSpark 
+    
     //--------------------- read the config file -------------------// 
     cfgXML = XML.loadFile(filename)
 

@@ -1,5 +1,6 @@
 package com.dataflood.cfactory
 
+import org.apache.spark.streaming.kafka._
 import java.util.concurrent.CountDownLatch
 import java.util.Properties
 import kafka.consumer.{ ConsumerConfig, Whitelist, Consumer }
@@ -28,6 +29,9 @@ class MyConsumer[T](threadId: Int, cdl: CountDownLatch, cgConfig: Properties, tr
   private var flushTime: Long = new Date().getTime()
   private var flushFlag: Boolean = false
 
+
+  
+  
   def run() {
     //-----------    info("reading on stream now")-------------//
     //    var numMessages: Int = 0
