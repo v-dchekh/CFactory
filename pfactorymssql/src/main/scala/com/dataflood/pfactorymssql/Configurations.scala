@@ -12,13 +12,13 @@ import java.sql.Statement
 import org.apache.log4j.Logger
 import java.sql.ResultSet
 
-object Configurations {
+object Config {
   protected val logger = Logger.getLogger(getClass.getName)
 
   def getСonnectionStringMSSQL(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "config" \\ "sql_connect") \ "@url").text
 
   def getArayConnectionMSSQL(arraySize: Int = 10): Array[Connection] = {
-    logger.info(s"Creation of SQL connection pool started (N = $arraySize)")
+    //    logger.info(s"Creation of SQL connection pool started (N = $arraySize)")
     val url = getСonnectionStringMSSQL()
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
@@ -37,7 +37,7 @@ object Configurations {
           else throw e
       }
     }
-    logger.info("Creation of SQL connection pool finished")
+    logger.info(s"SQL connection pool created (N = $arraySize)")
 
     arrayConnection
   }
@@ -84,34 +84,8 @@ object Configurations {
     groupList
   }
 
-  def getThread_number = {
-    val arrayConnection = Configurations.getArayConnectionMSSQL(1)
-    /*
-    try {
-      var connection: Connection = arrayConnection(0)
-      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableList(?)}")
-      pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
-      pstmt.setString(2, "1")
-      var rs : ResultSet = pstmt.executeQuery()
-      while (rs.next()) {
-         System.out.println("EMPLOYEE:");
-         System.out.println(rs.getString("LastName") + ", " + rs.getString("FirstName"));
-         System.out.println("MANAGER:");
-         System.out.println(rs.getString("ManagerLastName") + ", " + rs.getString("ManagerFirstName"));
-         System.out.println();
-      }
-
-      val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
-      logger.debug(resultSet)
-      rs.close();
-      pstmt.close
-
-    } catch {
-      case e: Throwable =>
-        if (true) logger.info(e)
-        else throw e
-    }
-*/
+  def getThreadNumber = {
+    val arrayConnection = getArayConnectionMSSQL(1)
     var thread_number: Int = 0
     try {
       var connection: Connection = arrayConnection(0)
@@ -130,6 +104,33 @@ object Configurations {
         else throw e
     }
     thread_number
+  }
+
+  def getTablesList = {
+    val arrayConnection = getArayConnectionMSSQL(1)
+    var arrayRows = new ArrayBuffer[HashMap[String, String]]()
+    try {
+      var connection = arrayConnection(0)
+      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTablesList}")
+      pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
+      val rs = pstmt.executeQuery()
+      val rsmd = rs.getMetaData()
+      val cols = rsmd.getColumnCount()
+
+      while (rs.next()) {
+        var arrayRow = new HashMap[String, String]
+        for (i <- 1 to cols) arrayRow += (rsmd.getColumnName(i) -> rs.getString(i))
+        arrayRows += arrayRow
+      }
+      logger.debug("\n" + arrayRows.toList.mkString("\n"))
+      pstmt.close
+
+    } catch {
+      case e: Throwable =>
+        if (true) logger.info(e)
+        else throw e
+    }
+    arrayRows
   }
 
   def getcons_GlobalConfig(cfgXML: Elem = App.cfgXML) = {

@@ -61,9 +61,11 @@ object App extends App {
   //--------------------- read the config file -------------------// 
   cfgXML = XML.loadFile(filename)
   //--------------------- get total number threads----------------// 
-  val latch = new CountDownLatch(Configurations.getThread_number)
 
-  val arrayConnection = Configurations.getArayConnectionMSSQL(latch.getCount.toInt)
+  val tablesList = Config.getTablesList
+  val latch = new CountDownLatch(tablesList.size)
+  val arrayConnection = Config.getArayConnectionMSSQL(tablesList.size)
+  
   //--------------------- get avro schemas---- -------------------//
-  val schemaList: HashMap[Int, Schema] = Configurations.getSchemaList()
+  val schemaList: HashMap[Int, Schema] = Config.getSchemaList()
 }
