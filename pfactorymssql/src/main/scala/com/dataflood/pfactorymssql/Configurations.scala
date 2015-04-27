@@ -23,7 +23,7 @@ object Config {
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
     // there's probably a better way to do this
-    var arrayConnection = new Array[Connection](arraySize)
+    val arrayConnection = new Array[Connection](arraySize)
     var connection: Connection = null
     var statement: Statement = null
 
@@ -110,15 +110,15 @@ object Config {
     val arrayConnection = getArayConnectionMSSQL(1)
     var arrayRows = new ArrayBuffer[HashMap[String, String]]()
     try {
-      var connection = arrayConnection(0)
-      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTablesList}")
+      val connection = arrayConnection(0)
+      val pstmt = connection.prepareCall("{? = call dbo.cdcGetTablesList}")
       pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
       val rs = pstmt.executeQuery()
       val rsmd = rs.getMetaData()
       val cols = rsmd.getColumnCount()
 
       while (rs.next()) {
-        var arrayRow = new HashMap[String, String]
+        val arrayRow = new HashMap[String, String]
         for (i <- 1 to cols) arrayRow += (rsmd.getColumnName(i) -> rs.getString(i))
         arrayRows += arrayRow
       }
