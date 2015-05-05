@@ -11,12 +11,15 @@ import java.sql.Connection
 import java.sql.Statement
 import org.apache.log4j.Logger
 import java.sql.ResultSet
+import org.apache.commons.pool2.{ PooledObject, BasePooledObjectFactory }
+import org.apache.commons.pool2.impl.{ DefaultPooledObject, GenericObjectPoolConfig, GenericObjectPool }
+import java.util.concurrent.{ ExecutorService, Executors }
 
 object Config {
   protected val logger = Logger.getLogger(getClass.getName)
 
   def getСonnectionStringMSSQL(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "config" \\ "sql_connect") \ "@url").text
-
+  /*
   def getArayConnectionMSSQL(arraySize: Int = 10): Array[Connection] = {
     //    logger.info(s"Creation of SQL connection pool started (N = $arraySize)")
     val url = getСonnectionStringMSSQL()
@@ -41,7 +44,7 @@ object Config {
 
     arrayConnection
   }
-
+*/
   def getSchemaPath(cfgXML: Elem = App.cfgXML) = ((cfgXML \\ "schemas") \ "@path").text
 
   def getSchemaList(cfgXML: Elem = App.cfgXML) = {
@@ -85,38 +88,42 @@ object Config {
   }
 
   def getThreadNumber = {
-    val arrayConnection = getArayConnectionMSSQL(1)
     var thread_number: Int = 0
+    val connection = App.poolSQLConnection.borrowObject()  
     try {
-      var connection: Connection = arrayConnection(0)
-      var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableNumber(?)}")
-      pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
-      pstmt.registerOutParameter(2, java.sql.Types.INTEGER);
-      pstmt.execute()
-      val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
-      thread_number = pstmt.getInt(2)
-      logger.debug(resultSet)
-      pstmt.close
+      try {
+        var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableNumber(?)}")
+        pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
+        pstmt.registerOutParameter(2, java.sql.Types.INTEGER);
+        pstmt.execute()
+        val resultSet = "RETURN STATUS: " + pstmt.getInt(1)
+        thread_number = pstmt.getInt(2)
+        logger.debug(resultSet)
+        pstmt.close
 
-    } catch {
-      case e: Throwable =>
-        if (true) logger.info(e)
-        else throw e
+      } catch {
+        case e: Throwable =>
+          if (true) logger.info(e)
+          else throw e
+      }
+    } finally {
+      App.poolSQLConnection.returnObject(connection)
     }
     thread_number
   }
 
   def getTablesList = {
-    val arrayConnection = getArayConnectionMSSQL(1)
+    //    val arrayConnection = getArayConnectionMSSQL(1)
     var arrayRows = new ArrayBuffer[HashMap[String, String]]()
     try {
-      val connection = arrayConnection(0)
+      //val connection = arrayConnection(0)
+      val connection = App.poolSQLConnection.borrowObject()
       val pstmt = connection.prepareCall("{? = call dbo.cdcGetTablesList}")
       pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
       val rs = pstmt.executeQuery()
       val rsmd = rs.getMetaData()
       val cols = rsmd.getColumnCount()
-
+      //logger.info(App.poolSQLConnection.getNumIdle, App.poolSQLConnection.getNumWaiters, App.poolSQLConnection.getNumActive)
       while (rs.next()) {
         val arrayRow = new HashMap[String, String]
         for (i <- 1 to cols) arrayRow += (rsmd.getColumnName(i) -> rs.getString(i))
@@ -124,12 +131,14 @@ object Config {
       }
       logger.debug("\n" + arrayRows.toList.mkString("\n"))
       pstmt.close
+      App.poolSQLConnection.returnObject(connection)
 
     } catch {
       case e: Throwable =>
         if (true) logger.info(e)
         else throw e
     }
+
     arrayRows
   }
 
@@ -140,6 +149,42 @@ object Config {
       props.put((n \ "@name").text, (n \ "@value").text)
     }
     props
+  }
+
+  def sqlConnectPool(maxNumCon: Int) = {
+    val p = createSQLConnectPool(getСonnectionStringMSSQL(), maxNumCon)
+    logger.info(p.getNumIdle, p.getNumWaiters, p.getNumActive)
+    p
+  }
+
+  class BaseSQLConnectFactory(url: String) extends Serializable {
+    def newInstance() = DriverManager.getConnection(url)
+  }
+
+  class PooledSQLConnectFactory(val factory: BaseSQLConnectFactory) extends BasePooledObjectFactory[Connection] with Serializable {
+    override def create(): Connection = factory.newInstance()
+
+    override def wrap(obj: Connection): PooledObject[Connection] = new DefaultPooledObject(obj)
+
+    // From the Commons Pool docs: "Invoked on every instance when it is being "dropped" from the pool.  There is no
+    // guarantee that the instance being destroyed will be considered active, passive or in a generally consistent state."
+    override def destroyObject(p: PooledObject[Connection]): Unit = {
+      p.getObject.close()
+      super.destroyObject(p)
+    }
+  }
+  def createSQLConnectPool(url: String, maxNumCon: Int): GenericObjectPool[Connection] = {
+    val sqlConnectFactory = new BaseSQLConnectFactory(url)
+
+    val pooledSQLConnectFactory = new PooledSQLConnectFactory(sqlConnectFactory)
+    val poolConfig = {
+      val c = new GenericObjectPoolConfig
+      c.setMaxTotal(maxNumCon)
+      c.setMaxIdle(maxNumCon)
+      c
+    }
+    new GenericObjectPool[Connection](pooledSQLConnectFactory, poolConfig)
+
   }
 
 }

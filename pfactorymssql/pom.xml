@@ -78,6 +78,12 @@
 		<artifactId>sqljdbc41</artifactId>
 		<version>4.1</version>
 	</dependency>	
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.3</version>
+	</dependency>
+	
   </dependencies>
 
   <build>

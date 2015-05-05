@@ -7,6 +7,8 @@ import scala.xml.XML
 import org.apache.avro.Schema
 import org.apache.log4j.Logger
 import java.sql.Connection
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig
+import org.apache.commons.pool2.impl.GenericObjectPool
 
 object App extends App {
   protected val logger = Logger.getLogger(getClass.getName)
@@ -62,10 +64,19 @@ object App extends App {
   cfgXML = XML.loadFile(filename)
   //--------------------- get total number threads----------------// 
 
+  val poolSQLConnection = Config.sqlConnectPool(5)
   val tablesList = Config.getTablesList
+  val producerPool = new KafkaProducerGroup(tablesList)
+
   val latch = new CountDownLatch(tablesList.size)
-  val arrayConnection = Config.getArayConnectionMSSQL(tablesList.size)
+  //  val arrayConnection = Config.getArayConnectionMSSQL(10)
+
   
+  logger.info(App.poolSQLConnection.getNumIdle, App.poolSQLConnection.getNumWaiters, App.poolSQLConnection.getNumActive)
+  Thread.sleep(16000)
+  poolSQLConnection.close()
+
   //--------------------- get avro schemas---- -------------------//
   val schemaList: HashMap[Int, Schema] = Config.getSchemaList()
+
 }
