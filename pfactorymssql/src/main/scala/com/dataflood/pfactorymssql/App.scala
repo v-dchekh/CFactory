@@ -11,70 +11,33 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import org.apache.commons.pool2.impl.GenericObjectPool
 
 object App extends App {
-  protected val logger = Logger.getLogger(getClass.getName)
+  val logger = Logger.getLogger(getClass.getName)
 
-  val usage = """
-              Usage: parser [-v] [-f file] [-s sopt] ...
-              Where: -v   Run verbosely
-                     -f F Set input file to F
-                     -s S Set Show option to S
-              """
-  val unknown = "(^-[^\\s])".r
-
-  var filename: String = ""
-  var showme: String = ""
-  var debug: Boolean = false
-  var threadNumberGlobal: Int = 0
-
-  val pf: PartialFunction[List[String], List[String]] = {
-    case "-v" :: tail =>
-      debug = true; tail
-    case "-f" :: (arg: String) :: tail =>
-      filename = arg; tail
-    case "-s" :: (arg: String) :: tail =>
-      showme = arg; tail
-    case unknown(bad) :: tail => endOfJob("unknown argument " + bad + "\n" + usage)
+  // ---------- ShutdownHook, shutdown with ctrl+c----------------
+  sys addShutdownHook (shutdown)
+  def shutdown() {
+    poolSQLConnection.close()
+    logger.info("------------SQL connection pool closed------------")
   }
 
-  def parseArgs(args: List[String], pf: PartialFunction[List[String], List[String]]): List[String] = args match {
-    case Nil => Nil
-    case _   => if (pf isDefinedAt args) parseArgs(pf(args), pf) else args.head :: parseArgs(args.tail, pf)
-  }
+  val remainingopts = InputParams.parseArgs(args.toList, InputParams.pf)
+  InputParams.setFile()
+  InputParams.printInfo()
 
-  def endOfJob(msg: String = usage) = {
-    println(msg)
-    sys.exit(1)
-  }
-
-  val arglist = args.toList
-  val remainingopts = parseArgs(arglist, pf)
-
-  var cfgXML: Elem = null
-
-  if (filename.length == 0) filename = getClass.getResource("/producer_msg.xml").getFile
-
-  logger.info("PFactoryMSSQL v0.1")
-  println("PFactoryMSSQL v0.1")
-  println("debug=" + debug)
-  println("showme=" + showme)
-  println("filename=" + filename)
-  println("remainingopts=" + remainingopts)
 
   //--------------------- read the config file -------------------// 
-  cfgXML = XML.loadFile(filename)
+  var cfgXML = XML.loadFile(InputParams.filename)
   //--------------------- get total number threads----------------// 
 
-  val poolSQLConnection = Config.sqlConnectPool(5)
+  val poolSQLConnection = Pool.getSQLConnectPool(5)
   val tablesList = Config.getTablesList
-  val producerPool = new KafkaProducerGroup(tablesList)
+  val poolProducer = new KafkaProducerGroup(tablesList)
 
   val latch = new CountDownLatch(tablesList.size)
   //  val arrayConnection = Config.getArayConnectionMSSQL(10)
 
-  
   logger.info(App.poolSQLConnection.getNumIdle, App.poolSQLConnection.getNumWaiters, App.poolSQLConnection.getNumActive)
-  Thread.sleep(16000)
-  poolSQLConnection.close()
+  Thread.sleep(1000)
 
   //--------------------- get avro schemas---- -------------------//
   val schemaList: HashMap[Int, Schema] = Config.getSchemaList()
