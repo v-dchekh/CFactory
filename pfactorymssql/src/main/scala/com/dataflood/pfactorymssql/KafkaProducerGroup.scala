@@ -12,32 +12,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.CountDownLatch
 
-class KfProducer(topicName: String, a: Int, cdl: CountDownLatch, finish: (KfProducer) => Unit) extends Runnable {
-  protected val logger = Logger.getLogger(getClass.getName)
-  var trNum = a
-  var topic = topicName
-
-  override def run() {
-    launch
-  }
-
-  def setParams(topicName: String, a: Int) {
-    trNum = a
-    topic = topicName
-    logger.info(topic + " ------------ " + trNum)
-  }
-
-  def launch {
-    val r = scala.util.Random
-    val randomInt = r.nextInt(10000)
-    logger.info(topic + " start  " + " #" + trNum + " " + randomInt)
-    Thread.sleep(randomInt)
-    logger.info(topic + " finish " + " #" + trNum + " " + randomInt)
-    cdl.countDown()
-    finish(this)
-  }
-
-}
 
 class KafkaProducerGroup(tablesList: ArrayBuffer[HashMap[String, String]], latch: CountDownLatch) {
   protected val logger = Logger.getLogger(getClass.getName)
