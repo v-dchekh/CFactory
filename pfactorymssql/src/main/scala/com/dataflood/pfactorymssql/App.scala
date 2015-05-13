@@ -13,33 +13,40 @@ import org.apache.commons.pool2.impl.GenericObjectPool
 object App extends App {
   val logger = Logger.getLogger(getClass.getName)
 
-  // ---------- ShutdownHook, shutdown with ctrl+c----------------
-  sys addShutdownHook (shutdown)
-  def shutdown() {
-    poolSQLConnection.close()
-    logger.info("------------SQL connection pool closed------------")
-  }
-
   val remainingopts = InputParams.parseArgs(args.toList, InputParams.pf)
   InputParams.setFile()
   InputParams.printInfo()
-
 
   //--------------------- read the config file -------------------// 
   var cfgXML = XML.loadFile(InputParams.filename)
   //--------------------- get total number threads----------------// 
 
-  val poolSQLConnection = Pool.getSQLConnectPool(5)
+  val poolSQLConnect = Pool.getSQLConnectPool(5)
   val tablesList = Config.getTablesList
-  val poolProducer = new KafkaProducerGroup(tablesList)
+  val latch = new CountDownLatch(tablesList.size * 5)
+  val poolProducer = new KafkaProducerGroup(tablesList, latch)
 
-  val latch = new CountDownLatch(tablesList.size)
   //  val arrayConnection = Config.getArayConnectionMSSQL(10)
 
-  logger.info(App.poolSQLConnection.getNumIdle, App.poolSQLConnection.getNumWaiters, App.poolSQLConnection.getNumActive)
-  Thread.sleep(1000)
+  logger.info(poolSQLConnect.getNumIdle, poolSQLConnect.getNumWaiters, poolSQLConnect.getNumActive)
+  //Thread.sleep(1000)
 
   //--------------------- get avro schemas---- -------------------//
   val schemaList: HashMap[Int, Schema] = Config.getSchemaList()
+
+  // ---------- ShutdownHook, shutdown with ctrl+c----------------
+  while (true) {
+    val pp = poolProducer.producerPool2
+    val ps = poolProducer.service
+    
+    logger.info(pp.getMaxIdle, pp.getNumWaiters, pp.getNumActive,pp.getReturnedCount)
+    Thread.sleep(5000)
+  }
+  latch.await()
+  sys addShutdownHook (shutdown)
+  def shutdown() {
+    poolSQLConnect.close()
+    logger.info("------------SQL connection pool closed------------")
+  }
 
 }

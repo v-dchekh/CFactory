@@ -2,6 +2,7 @@ package com.dataflood.pfactorymssql
 
 import org.apache.commons.pool2.impl.DefaultPooledObject
 import org.apache.commons.pool2.{ PooledObject, BasePooledObjectFactory }
+import java.util.concurrent.CountDownLatch
 
 /**
  * An object factory for Kafka producer apps, which is used to create a pool of such producers (think: DB connection
@@ -15,32 +16,27 @@ import org.apache.commons.pool2.{ PooledObject, BasePooledObjectFactory }
  * [[http://spark.apache.org/docs/1.1.0/streaming-programming-guide.html#output-operations-on-dstreams Output Operations on DStreams]]
  */
 // TODO: Time out / shutdown producers if they haven't been used in a while.
-class PooledKafkaProducerAppFactory(val factory: KafkaProducerAppFactory)
-  extends BasePooledObjectFactory[KafkaProducerApp] with Serializable {
 
-  override def create(): KafkaProducerApp = factory.newInstance()
+abstract class KafkaProducerAppFactory2(topic: String, a: Int)
+  extends Serializable {
+  def newInstance(): KfProducer
+}
 
-  override def wrap(obj: KafkaProducerApp): PooledObject[KafkaProducerApp] = new DefaultPooledObject(obj)
-
-  // From the Commons Pool docs: "Invoked on every instance when it is being "dropped" from the pool.  There is no
-  // guarantee that the instance being destroyed will be considered active, passive or in a generally consistent state."
-  override def destroyObject(p: PooledObject[KafkaProducerApp]): Unit = {
-    p.getObject.shutdown()
-    super.destroyObject(p)
-  }
-
+class BaseKafkaProducerAppFactory2(topic: String, a: Int, latch: CountDownLatch, finish: (KfProducer) => Unit)
+  extends KafkaProducerAppFactory2(topic, a) {
+  override def newInstance() = new KfProducer(topic, a, latch, finish)
 }
 
 class PooledKafkaProducerAppFactory2(val factory: KafkaProducerAppFactory2)
-  extends BasePooledObjectFactory[Producer2] with Serializable {
+  extends BasePooledObjectFactory[KfProducer] with Serializable {
 
-  override def create(): Producer2 = factory.newInstance()
+  override def create(): KfProducer = factory.newInstance()
 
-  override def wrap(obj: Producer2): PooledObject[Producer2] = new DefaultPooledObject(obj)
+  override def wrap(obj: KfProducer): PooledObject[KfProducer] = new DefaultPooledObject(obj)
 
   // From the Commons Pool docs: "Invoked on every instance when it is being "dropped" from the pool.  There is no
   // guarantee that the instance being destroyed will be considered active, passive or in a generally consistent state."
-  override def destroyObject(p: PooledObject[Producer2]): Unit = {
+  override def destroyObject(p: PooledObject[KfProducer]): Unit = {
     super.destroyObject(p)
   }
 

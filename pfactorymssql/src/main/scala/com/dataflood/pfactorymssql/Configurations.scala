@@ -89,10 +89,10 @@ object Config {
 
   def getThreadNumber = {
     var thread_number: Int = 0
-    val connection = App.poolSQLConnection.borrowObject()  
+    val connect = App.poolSQLConnect.borrowObject()  
     try {
       try {
-        var pstmt = connection.prepareCall("{? = call dbo.cdcGetTableNumber(?)}")
+        var pstmt = connect.prepareCall("{? = call dbo.cdcGetTableNumber(?)}")
         pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
         pstmt.registerOutParameter(2, java.sql.Types.INTEGER);
         pstmt.execute()
@@ -107,7 +107,7 @@ object Config {
           else throw e
       }
     } finally {
-      App.poolSQLConnection.returnObject(connection)
+      App.poolSQLConnect.returnObject(connect)
     }
     thread_number
   }
@@ -117,8 +117,8 @@ object Config {
     var arrayRows = new ArrayBuffer[HashMap[String, String]]()
     try {
       //val connection = arrayConnection(0)
-      val connection = App.poolSQLConnection.borrowObject()
-      val pstmt = connection.prepareCall("{? = call dbo.cdcGetTablesList}")
+      val connect = App.poolSQLConnect.borrowObject()
+      val pstmt = connect.prepareCall("{? = call dbo.cdcGetTablesList}")
       pstmt.registerOutParameter(1, java.sql.Types.INTEGER);
       val rs = pstmt.executeQuery()
       val rsmd = rs.getMetaData()
@@ -131,7 +131,7 @@ object Config {
       }
       logger.debug("\n" + arrayRows.toList.mkString("\n"))
       pstmt.close
-      App.poolSQLConnection.returnObject(connection)
+      App.poolSQLConnect.returnObject(connect)
 
     } catch {
       case e: Throwable =>
