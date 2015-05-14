@@ -12,20 +12,16 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.CountDownLatch
 
-
 class KafkaProducerGroup(tablesList: ArrayBuffer[HashMap[String, String]], latch: CountDownLatch) {
   protected val logger = Logger.getLogger(getClass.getName)
 
-  val service: ExecutorService = Executors.newFixedThreadPool(100)
-  val producerPool2: GenericObjectPool[KfProducer] = createKafkaProducerPool("test", 1, latch, { (pr) => finish(pr) })
+  val service: ExecutorService = Executors.newFixedThreadPool(10)
+  val producerPool2: GenericObjectPool[KfProducer] = Pool.createKafkaProducerPool("test", 1, latch, { (pr) => finish(pr) })
   tablesList.foreach { x =>
     val recordArray = x.toArray
     val topic = recordArray(1)._2
     logger.info(recordArray(1)._1 + " - " + topic)
-    //val producerPool = createKafkaProducerPool("brokerList", topic)
-
-    //val producerPool2 = createKafkaProducerPool(topic, 1, latch)
-    for (a <- 1 to 10) {
+    for (a <- 1 to 3) {
       producerPool2.addObject()
       val p = producerPool2.borrowObject()
       p.setParams(topic, a)
@@ -33,40 +29,31 @@ class KafkaProducerGroup(tablesList: ArrayBuffer[HashMap[String, String]], latch
     }
 
     logger.info(producerPool2.getMaxIdle, producerPool2.getNumWaiters, producerPool2.getNumActive)
-    try {
-      for (a <- 1 to 10) {
-        val p = producerPool2.borrowObject()
-        service.submit(p)
-      }
-    } finally {
-      logger.info(producerPool2.listAllObjects().toString())
-      //      service.shutdown()
-      logger.info("------------service.shutdown()------------")
+    while (true) {
+      try {
+        for (a <- 1 to 3) {
+          val p = producerPool2.borrowObject()
+          service.submit(p)
+        }
+        logger.info(producerPool2.getMaxIdle, producerPool2.getNumWaiters, producerPool2.getNumActive)
+        Thread.sleep(10000)
+      } finally {
+        logger.info(producerPool2.listAllObjects().toString())
+        //      service.shutdown()
+        logger.info("------------service.shutdown()------------")
 
+      }
     }
   }
   def finish(pr: KfProducer) {
-    if (true) {
+    if (pr.rowNumber == 0) {
       producerPool2.returnObject(pr)
-      Thread.sleep(1000)
+      //Thread.sleep(1000)
+      logger.info("------------------------")
+    } else {
+      service.submit(pr)
     }
-    val p = producerPool2.borrowObject()
-    service.submit(p)
 
-  }
-
-  def createKafkaProducerPool(topic: String, a: Int, latch: CountDownLatch, finish: (KfProducer) => Unit): GenericObjectPool[KfProducer] = {
-    val producerFactory = new BaseKafkaProducerAppFactory2(topic, a, latch, finish)
-
-    val pooledProducerFactory = new PooledKafkaProducerAppFactory2(producerFactory)
-    val poolConfig = {
-      val c = new GenericObjectPoolConfig
-      val maxNumProducers = 100
-      c.setMaxTotal(maxNumProducers)
-      c.setMaxIdle(maxNumProducers)
-      c
-    }
-    new GenericObjectPool[KfProducer](pooledProducerFactory, poolConfig)
   }
 
 }
