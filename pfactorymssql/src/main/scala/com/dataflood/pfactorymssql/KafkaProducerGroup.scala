@@ -15,13 +15,13 @@ import java.util.concurrent.CountDownLatch
 class KafkaProducerGroup(tablesList: ArrayBuffer[HashMap[String, String]], latch: CountDownLatch) {
   protected val logger = Logger.getLogger(getClass.getName)
 
-  val service: ExecutorService = Executors.newFixedThreadPool(10)
+  val service: ExecutorService = Executors.newFixedThreadPool(20)
   val producerPool2: GenericObjectPool[KfProducer] = Pool.createKafkaProducerPool("test", 1, latch, { (pr) => finish(pr) })
   tablesList.foreach { x =>
     val recordArray = x.toArray
     val topic = recordArray(1)._2
     logger.info(recordArray(1)._1 + " - " + topic)
-    for (a <- 1 to 3) {
+    for (a <- 1 to 20) {
       producerPool2.addObject()
       val p = producerPool2.borrowObject()
       p.setParams(topic, a)
@@ -38,22 +38,24 @@ class KafkaProducerGroup(tablesList: ArrayBuffer[HashMap[String, String]], latch
         logger.info(producerPool2.getMaxIdle, producerPool2.getNumWaiters, producerPool2.getNumActive)
         Thread.sleep(10000)
       } finally {
-        logger.info(producerPool2.listAllObjects().toString())
-        //      service.shutdown()
+        // service.shutdown()
         logger.info("------------service.shutdown()------------")
 
       }
     }
   }
   def finish(pr: KfProducer) {
-    if (pr.rowNumber == 0) {
-      producerPool2.returnObject(pr)
-      //Thread.sleep(1000)
-      logger.info("------------------------")
-    } else {
-      service.submit(pr)
+    pr.rowNumber match {
+      case -1 => {
+        Thread.sleep(1000)
+        service.submit(pr)
+      }
+      case 0 => {
+        producerPool2.returnObject(pr)
+      }
+      case _ => service.submit(pr)
     }
-
+    logger.info(producerPool2.getMaxIdle, producerPool2.getNumWaiters, producerPool2.getNumActive)
   }
 
 }
